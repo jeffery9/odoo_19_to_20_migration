@@ -1,0 +1,21 @@
+<odoo>
+  <record id="demo_list" model="ir.ui.view">
+    <field name="arch" type="xml">
+      <tree>
+        <field name="code"/>
+      </tree>
+    </field>
+  </record>
+  <record id="demo_rule" model="ir.rule">
+    <field name="domain_force">[(1, '=', 1)]</field>
+  </record>
+  <record id="demo_filter" model="ir.ui.view">
+    <field name="arch" type="xml">
+      <search><filter name="date" date="create_date" start_month="-1" end_month="0"/></search>
+    </field>
+  </record>
+  <template id="demo_thumb">
+    <button icon="fa-check"/>
+    <img t-attf-src="data:image/png;base64,#{rec.img}"/>
+  </template>
+</odoo>

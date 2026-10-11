@@ -1,0 +1,254 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<title>Odoo Migration Cookbook — Volume II: Closing the Gaps (19 → 20)</title>
+<style>
+@page { size: 595pt 842pt; margin: 57pt 50pt 45pt 50.2pt; }
+* { box-sizing: border-box; }
+body { font-family: 'Libre Baskerville', serif; font-size: 12.8pt; color: #241c14; line-height: 1.7; }
+.panel { position: fixed; top: -17.2pt; left: -16.4pt; width: 527.4pt; height: 757.4pt;
+         background: #f6f1e7; border: 0.7pt solid #d8cfc0; z-index: -1; }
+.pb, h1.ch, .toc-title { break-before: page; }
+h1 { font-weight: 400; color: #1c2a3a; margin: 0 0 4pt; line-height: 1.2; }
+h1.ch { margin-top: 42pt; }
+h1.ch::after { content: ''; display: block; width: 48pt; height: 1.5pt; background: #8b6914; margin: 12pt 0 0; }
+h1.cover { color: #241c14; margin: 6pt 0; }
+.toc-title { color: #1c2a3a; font-weight: 700; margin-top: 40pt; }
+a { color: inherit; }
+a.back { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 9pt; color: #5a4c42;
+         letter-spacing: 1.1pt; text-decoration: none; margin: 10pt 0 16pt; }
+a.toc-entry { display: block; text-decoration: none; margin: 0 0 7pt; }
+h2 { font-size: 12.8pt; font-weight: 700; margin: 16pt 0 8pt; color: #241c14; }
+h3.gold { font-size: 11.2pt; font-weight: 700; color: #8b6914; letter-spacing: .8pt;
+          text-transform: uppercase; margin: 16pt 0 7pt; }
+p { margin: 0 0 10pt; }
+.b { font-weight: 700; } .i { font-style: italic; }
+.chip { font-family: 'IBM Plex Mono', monospace; font-size: 9.8pt; background: #f3eee4;
+        padding: 1.2pt 4pt; border-radius: 2.5pt; overflow-wrap: anywhere; }
+.mono { font-family: 'IBM Plex Mono', monospace; }
+pre.code { font-family: 'IBM Plex Mono', monospace; font-size: 9.8pt; line-height: 1.62; color: #f0e7d2;
+           background: #121c28; border-left: 2.3pt solid #8b6914; padding: 11pt 16pt; margin: 10pt 0;
+           white-space: pre-wrap; overflow-wrap: anywhere; }
+pre.code .cr { font-family: inherit; }
+table { border-collapse: collapse; width: 100%; table-layout: fixed; background: #fffdf8; margin: 12pt 0; }
+th, td { border: 0.75pt solid #c9b89a; padding: 6.5pt 9pt; vertical-align: top; font-size: 9.8pt;
+         line-height: 1.55; text-align: left; font-weight: 400; }
+th { background: #1c2a3a; color: #f4eed6; font-family: 'IBM Plex Mono', monospace; font-weight: 700; }
+tbody tr:nth-child(even) td { background: #efe7d6; }
+td.note { font-size: 9.8pt; }
+td .chip, th .chip { font-size: 9.8pt; }
+ul.bullets { list-style: none; margin: 8pt 0 10pt; padding: 0; }
+ul.bullets li { position: relative; padding-left: 16.5pt; margin: 0 0 7pt; }
+ul.bullets li::before { content: '\2022'; position: absolute; left: 2pt; color: #241c14; }
+hr { border: 0; border-top: 0.7pt solid #d8cfc0; margin: 16pt 0; }
+tr, li, pre.code, h1, h2, h3 { break-inside: avoid; }
+thead { break-inside: avoid; }
+h1.sub { color: #1c2a3a; font-weight: 700; margin: 18pt 0 8pt; }
+.toc-title { color: #241c14 !important; }
+a.toc-entry { display: block; text-decoration: none; border-bottom: 0.7pt solid #d8cfc0;
+              padding: 8.5pt 0 8pt; margin: 0; }
+.tocnum { display: inline-block; width: 55pt; }
+div.coverpage { margin: -17.2pt -16.4pt 0; height: 757.4pt; padding: 42pt 44pt 40pt;
+                background: linear-gradient(150deg, #0e1720 0%, #16212e 55%, #253443 100%);
+                break-after: page; color: #f0e7d2; }
+div.coverpage .cover-mono { font-family: 'IBM Plex Mono', monospace; font-size: 9pt;
+        letter-spacing: 1.6pt; color: #c8bba8; margin: 0 0 4pt; }
+div.coverpage .cover-title { color: #fdf6e9; font-weight: 400; line-height: 1.3; margin: 0; }
+.cover-rule + .cover-title { margin-top: 26pt; }
+div.coverpage .cover-sub { color: #e5c987; font-style: italic; margin: 14pt 0 0; }
+div.coverpage .cover-line { margin: 0 0 7pt; color: #f0e7d2; }
+div.coverpage .cover-line .cr { color: #e5c987; }
+.cover-rule { width: 90pt; height: 1.5pt; background: #8b6914; margin: 18pt 0 0; }
+.cover-bottom { margin-top: 330pt; }
+.cover-bottom .cover-line { margin: 0 0 8pt; }
+</style></head><body>
+<div class="panel"></div>
+<div class="coverpage">
+<div class="cover-rule"></div>
+<div class="cover-title" style="font-size:27pt">Odoo Migration</div>
+<div class="cover-title" style="font-size:27pt">Cookbook — Volume II</div>
+<div class="cover-sub" style="font-size:16.5pt">Closing the Gaps: Version 19 to Version 20</div>
+<div class="cover-mono">COMMUNITY EDITION AND ENTERPRISE EDITION · COMPANION EDITION · OCTOBER 2026</div>
+<div class="cover-bottom">
+<div class="cover-line">An independent companion to Volume I</div>
+<div class="cover-line">Every entry verified against the odoo/odoo source trees, branches 19.0 and 20.0</div>
+</div></div>
+<div class="pb"></div>
+<p><span>Volume I collected the 19 → 20 replacements used most often in custom modules: the </span><span class="chip" style="font-size:9.8pt">ir.access.csv</span><span> security file, ORM and Python renames, search domains, binary and report handling, view and QWeb xpaths, Owl 3, and the accounting, stock, HR and website mappings. This companion volume deliberately does not repeat them.</span></p>
+<p><span>Volume II covers the ground Volume I leaves open: the new Python floor and package layout, the moved import surface (</span><span class="chip" style="font-size:9.8pt">odoo.osv</span><span>, </span><span class="chip" style="font-size:9.8pt">odoo.tools</span><span> re-exports), caching and query objects, the access-check and recursion APIs, the </span><span class="chip" style="font-size:9.8pt">read_group</span><span> signature overhaul, field and domain breaking changes, and the rewritten testing toolkit.</span></p>
+<h2><span class="b">Method</span></h2>
+<ul class="bullets"><li><span>Every entry was verified on 2026-10-11 by comparing the </span><span class="chip" style="font-size:9.8pt">odoo/odoo</span><span> branches </span><span class="chip" style="font-size:9.8pt">19.0</span><span> and </span><span class="chip" style="font-size:9.8pt">20.0</span><span> file by file (release.py, orm package, tools, tests, base and mail models). The verification log is in Appendix A.</span></li></ul>
+<ul class="bullets"><li><span>Entries hold for Community and Enterprise alike unless marked </span><span class="b">EE</span><span>. Enterprise-only modules are out of scope for this volume.</span></li></ul>
+<ul class="bullets"><li><span>Code samples are signatures or minimal patterns copied from the 20.0 tree, not full implementations.</span></li></ul>
+<h2><span class="b">How to read the tables</span></h2>
+<p><span>Left column: what your 19 module contains today. Right column: what 20 accepts. A </span><span class="chip" style="font-size:9.8pt">monospace chip</span><span> marks code; bold marks keywords.</span></p>
+<h1 class="toc-title pb" id="contents" style="font-size:25.5pt">Contents</h1>
+<p><span>Select a chapter to open it.</span></p>
+<a class="toc-entry" href="#ch-1"><span class="tocnum">1.</span>Runtime, packaging, and the import surface</a>
+<a class="toc-entry" href="#ch-2"><span class="tocnum">2.</span>Caching, queries, and SQL objects</a>
+<a class="toc-entry" href="#ch-3"><span class="tocnum">3.</span>Model and access API deltas</a>
+<a class="toc-entry" href="#ch-4"><span class="tocnum">4.</span>Fields and domains: breaking changes</a>
+<a class="toc-entry" href="#ch-5"><span class="tocnum">5.</span>Testing and CI toolkit</a>
+<a class="toc-entry" href="#ch-6"><span class="tocnum">6.</span>Grep-driven migration checklist</a>
+<a class="toc-entry" href="#ch-7"><span class="tocnum">7.</span>Automated codemods: odoo-bin upgrade_code</a>
+<a class="toc-entry" href="#ch-8"><span class="tocnum">8.</span>Appendix A — verification log</a>
+<h1 class="ch pb" id="ch-1">1. Runtime, packaging, and the import surface</h1>
+<a class="back" href="#contents">BACK TO CONTENTS</a>
+<h2><span class="b">Python floor moves to 3.12</span></h2>
+<p><span>Odoo 19 runs on Python ≥ 3.10; Odoo 20 raises the floor to </span><span class="b">Python ≥ 3.12</span><span> (</span><span class="chip" style="font-size:9.8pt">odoo/release.py</span><span>, </span><span class="chip" style="font-size:9.8pt">MIN_PY_VERSION</span><span>). Core code now uses PEP 695 generic syntax, which only 3.12+ parses:</span></p>
+<pre class="code"># odoo/addons/base/models/ir_config_parameter.py — 20.0
+def get_int[T](self, key: str, default: T = 0) -&gt; int | T:
+    ...</pre>
+<ul class="bullets"><li><span>Upgrade CI images, Dockerfiles and </span><span class="chip" style="font-size:9.8pt">python_requires</span><span> of your addons before attempting the registry upgrade.</span></li></ul>
+<ul class="bullets"><li><span>3.12 also removes </span><span class="chip" style="font-size:9.8pt">distutils</span><span> and tightens </span><span class="chip" style="font-size:9.8pt">ast</span><span>/</span><span class="chip" style="font-size:9.8pt">inspect</span><span> behaviour; audit legacy setup scripts.</span></li></ul>
+<h2><span class="b">Package layout</span></h2>
+<table><colgroup><col style="width:42.00%"/><col style="width:58.00%"/></colgroup><thead><tr><th>Odoo 19</th><th>Odoo 20</th></tr></thead><tbody><tr><td><span class="chip">odoo/http.py</span><span> (single module)</span></td><td><span class="chip">odoo/http/</span><span> (package). </span><span class="chip">import odoo.http</span><span> and </span><span class="chip">from odoo import http</span><span> keep working.</span></td></tr><tr><td><span class="chip">odoo/osv/</span><span> with </span><span class="chip">expression.py</span></td><td><span>Removed. Domains live in </span><span class="chip">odoo/orm/domains.py</span><span> (Chapter 4).</span></td></tr><tr><td><span class="chip">odoo/models</span><span>, </span><span class="chip">odoo/fields</span><span>, </span><span class="chip">odoo/api</span><span> shim packages</span></td><td><span>Unchanged shims re-exporting </span><span class="chip">odoo.orm.*</span><span>. </span><span class="chip">from odoo import models, fields, api</span><span> stays canonical in both versions.</span></td></tr><tr><td><span class="chip">odoo/orm/</span><span> core (models, fields, domains, …)</span></td><td><span>Same package plus new modules </span><span class="chip">cache.py</span><span>, </span><span class="chip">models_cached.py</span><span>, </span><span class="chip">query.py</span><span>.</span></td></tr></tbody></table>
+<h2><span class="b">The odoo.tools export surface</span></h2>
+<p><span>Several names disappeared from </span><span class="chip" style="font-size:9.8pt">odoo/tools/__init__.py</span><span> in 20, and binary/SQL names became public:</span></p>
+<table><colgroup><col style="width:42.00%"/><col style="width:58.00%"/></colgroup><thead><tr><th>Name in 19 (from odoo.tools)</th><th>Status in 20</th></tr></thead><tbody><tr><td><span class="chip">Query</span></td><td><span>No longer exported. Import </span><span class="chip">from odoo.orm.query import Query</span><span>.</span></td></tr><tr><td><span class="chip">ormcache</span></td><td><span>No longer exported from tools. Use </span><span class="chip">@api.ormcache</span><span> (Chapter 2).</span></td></tr><tr><td><span class="chip">ormcache_context</span></td><td><span>Removed with no replacement.</span></td></tr><tr><td><span class="chip">convert_xml_import</span><span> / </span><span class="chip">convert_csv_import</span><span> / </span><span class="chip">convert_sql_import</span></td><td><span>No longer exported; see internals of </span><span class="chip">odoo/tools/convert.py</span><span>.</span></td></tr><tr><td><span>—</span></td><td><span>Newly public: </span><span class="chip">SQL</span><span>, </span><span class="chip">BinaryValue</span><span>, </span><span class="chip">BinaryBytes</span><span>, </span><span class="chip">drop_view_if_exists</span><span>. The binary classes are defined in </span><span class="chip">odoo/tools/binary.py</span><span> and were private in 19.</span></td></tr></tbody></table>
+<pre class="code"># 19
+from odoo.tools import Query, ormcache
+from odoo.tools.binary import BinaryValue      # private path
+
+# 20
+from odoo import api
+from odoo.orm.query import Query
+from odoo.tools import BinaryValue, BinaryBytes, SQL</pre>
+<h1 class="ch pb" id="ch-2">2. Caching, queries, and SQL objects</h1>
+<a class="back" href="#contents">BACK TO CONTENTS</a>
+<h2><span class="b">ormcache moves to the api module</span></h2>
+<p><span>The decorator class lives in </span><span class="chip" style="font-size:9.8pt">odoo/orm/cache.py</span><span> in 20 (it was in </span><span class="chip" style="font-size:9.8pt">odoo/tools/cache.py</span><span> in 19) and is re-exported through </span><span class="chip" style="font-size:9.8pt">odoo.api</span><span>:</span></p>
+<pre class="code"># 19
+from odoo.tools import ormcache, ormcache_context
+
+class MyModel(models.Model):
+    @ormcache('name')
+    def _get_id_by_name(self, name): ...
+
+# 20
+from odoo import api
+
+class MyModel(models.Model):
+    @api.ormcache('name')            # or: @api.ormcache(cache='stable')
+    def _get_id_by_name(self, name): ...</pre>
+<ul class="bullets"><li><span class="chip" style="font-size:9.8pt">ormcache_context</span><span> is gone. Fold the context values you cached on into explicit method arguments so they become part of the cache key.</span></li></ul>
+<ul class="bullets"><li><span>Cache introspection moved with it: </span><span class="chip" style="font-size:9.8pt">odoo.orm.cache.get_cache_size</span><span>, </span><span class="chip" style="font-size:9.8pt">get_cache_key_counter</span><span>, </span><span class="chip" style="font-size:9.8pt">log_ormcache_stats</span><span>.</span></li></ul>
+<ul class="bullets"><li><span>Invalidation also changed name: the </span><span class="chip" style="font-size:9.8pt">registry.clear_cache()</span><span> calls scattered in 19 code become </span><span class="chip" style="font-size:9.8pt">self.env.transaction.invalidate_ormcache()</span><span> in 20 — exactly what the bundled codemod </span><span class="chip" style="font-size:9.8pt">19.4-00-ormcache-on-transaction</span><span> rewrites (Chapter 7).</span></li></ul>
+<h2><span class="b">Query and SQL</span></h2>
+<p><span class="chip" style="font-size:9.8pt">Query</span><span> (the ORM query builder) is defined in </span><span class="chip" style="font-size:9.8pt">odoo/orm/query.py</span><span> in 20; in 19 it reached you through the </span><span class="chip" style="font-size:9.8pt">odoo.tools</span><span> re-export. The </span><span class="chip" style="font-size:9.8pt">SQL</span><span> composable class is unchanged in </span><span class="chip" style="font-size:9.8pt">odoo/tools/sql.py</span><span> and is now a public </span><span class="chip" style="font-size:9.8pt">odoo.tools</span><span> export.</span></p>
+<pre class="code"># odoo/sql_db.py — 20.0
+def execute(self, query: SQL | typing.LiteralString | psql.Composable,
+            params=None, log_exceptions: bool = True) -&gt; None:
+    if isinstance(query, SQL):
+        assert params is None, "Unexpected parameters for SQL query object"</pre>
+<ul class="bullets"><li><span>Plain string queries still execute (</span><span class="chip" style="font-size:9.8pt">LiteralString</span><span>), but pairing an </span><span class="chip" style="font-size:9.8pt">SQL</span><span> object with </span><span class="chip" style="font-size:9.8pt">params</span><span> is now an assertion error — build parameters into the </span><span class="chip" style="font-size:9.8pt">SQL</span><span> composable.</span></li></ul>
+<h1 class="ch pb" id="ch-3">3. Model and access API deltas</h1>
+<a class="back" href="#contents">BACK TO CONTENTS</a>
+<p><span>Signatures below were read from </span><span class="chip" style="font-size:9.8pt">odoo/orm/models.py</span><span> on both branches. Volume I covers </span><span class="chip" style="font-size:9.8pt">check_access_rights</span><span> → </span><span class="chip" style="font-size:9.8pt">check_access</span><span>/</span><span class="chip" style="font-size:9.8pt">has_access</span><span>; the remaining renames are listed here.</span></p>
+<table><colgroup><col style="width:44.00%"/><col style="width:56.00%"/></colgroup><thead><tr><th>Odoo 19</th><th>Odoo 20</th></tr></thead><tbody><tr><td><span class="chip">check_access_rule(operation)</span></td><td><span>Removed. Record rules are enforced inside </span><span class="chip">check_access(operation)</span><span> / </span><span class="chip">has_access(operation)</span><span>.</span></td></tr><tr><td><span class="chip">_filter_access_rules(op)</span><span> / </span><span class="chip">_filter_access_rules_python(op)</span></td><td><span>Internal successor </span><span class="chip">_access_domain(op)</span><span> returns the rule domain; the Python-side filter method is gone. Treat both as private.</span></td></tr><tr><td><span class="chip">check_field_access_rights(fields, operation, ...)</span></td><td><span class="chip">check_field_access(field, operation)</span><span> and </span><span class="chip">has_field_access(field, operation)</span><span> — per-field checks with </span><span class="chip">Literal['read','write']</span><span>.</span></td></tr><tr><td><span class="chip">toggle_active()</span></td><td><span>Removed with the </span><span class="chip">toggle_active</span><span> window action; call </span><span class="chip">action_archive</span><span> / </span><span class="chip">action_unarchive</span><span> (Volume I, Ch. 2).</span></td></tr><tr><td><span class="chip">_check_recursion()</span><span> / </span><span class="chip">_check_m2m_recursion(field)</span></td><td><span class="chip">_has_cycle(field_name=None)</span><span> — already present in 19, so adopt it before migrating.</span></td></tr><tr><td><span class="chip">copy_translations(records)</span></td><td><span>Removed; translation copy is handled internally, no public replacement.</span></td></tr><tr><td><span class="chip">read_group(domain, fields, groupby, offset=0, limit=None, orderby=False, lazy=True)</span></td><td><span class="chip">read_group(domain, groupby=(), aggregates=(), having=(), offset=0, limit=None, order=None)</span><span> returning </span><span class="chip">list[tuple]</span><span>.</span></td></tr></tbody></table>
+<h3 class="gold">READ_GROUP BEFORE AND AFTER</h3>
+<pre class="code"># 19 — lazy dict-based API
+groups = env['sale.order'].read_group(
+    domain, ['amount_total'], ['state'], lazy=False)
+
+# 20 — explicit groupby + aggregate specs, tuples back
+rows = env['sale.order'].read_group(
+    domain,
+    groupby=['state'],
+    aggregates=['amount_total:sum', '__count'])
+for state, total, count in rows: ...</pre>
+<ul class="bullets"><li><span>Aggregate specs use the </span><span class="chip" style="font-size:9.8pt">field:agg</span><span> syntax (</span><span class="chip" style="font-size:9.8pt">sum</span><span>, </span><span class="chip" style="font-size:9.8pt">avg</span><span>, </span><span class="chip" style="font-size:9.8pt">min</span><span>, </span><span class="chip" style="font-size:9.8pt">max</span><span>, </span><span class="chip" style="font-size:9.8pt">array_agg</span><span>, …); </span><span class="chip" style="font-size:9.8pt">__count</span><span> replaces the old </span><span class="chip" style="font-size:9.8pt">state_count</span><span> key.</span></li></ul>
+<ul class="bullets"><li><span>The </span><span class="chip" style="font-size:9.8pt">having</span><span> parameter accepts a domain on aggregated values — new in the public API.</span></li></ul>
+<h1 class="ch pb" id="ch-4">4. Fields and domains: breaking changes</h1>
+<a class="back" href="#contents">BACK TO CONTENTS</a>
+<h2><span class="b">group_operator is gone — use aggregator</span></h2>
+<p><span>19 still accepts </span><span class="chip" style="font-size:9.8pt">group_operator</span><span> but warns </span><span class="b">“Since Odoo 18, 'group_operator' is deprecated, use 'aggregator' instead”</span><span>. In 20 the keyword no longer exists:</span></p>
+<pre class="code"># 19 (DeprecationWarning)          # 20
+total = fields.Monetary(          total = fields.Monetary(
+    group_operator='sum')             aggregator='sum')</pre>
+<h2><span class="b">Raw SQL in domain leaves now raises</span></h2>
+<p><span>Passing an </span><span class="chip" style="font-size:9.8pt">SQL</span><span> object as a domain leaf value warns in 19 (</span><span class="chip" style="font-size:9.8pt">“Since 19.0, use Domain.custom(to_sql=…)”</span><span>) and raises </span><span class="chip" style="font-size:9.8pt">TypeError</span><span> in 20 (</span><span class="chip" style="font-size:9.8pt">“Unexpected SQL in condition …, use Domain.custom() instead”</span><span>):</span></p>
+<pre class="code"># 20 — odoo/orm/fields.py docstring pattern
+domain = Domain.custom(
+    to_sql=lambda table: SQL(
+        "(%s IS NULL OR %s = %s)",
+        table.company_id, table.company_id, company_id))</pre>
+<h2><span class="b">odoo.osv.expression → odoo.orm.domains</span></h2>
+<table><colgroup><col style="width:44.00%"/><col style="width:56.00%"/></colgroup><thead><tr><th>Odoo 19 (odoo.osv.expression)</th><th>Odoo 20 (odoo.orm.domains / Domain)</th></tr></thead><tbody><tr><td><span class="chip">from odoo.osv import expression</span></td><td><span>Import error — the </span><span class="chip">odoo/osv</span><span> package is removed. Use </span><span class="chip">from odoo.orm.domains import Domain</span><span>.</span></td></tr><tr><td><span class="chip">expression.AND(ds)</span><span> / </span><span class="chip">expression.OR(ds)</span></td><td><span class="chip">Domain.AND(ds)</span><span> / </span><span class="chip">Domain.OR(ds)</span><span>, or the </span><span class="chip">&amp;</span><span> / </span><span class="chip">|</span><span> operators.</span></td></tr><tr><td><span class="chip">expression.is_false(model, domain)</span></td><td><span class="chip">Domain(d).is_false()</span><span> / </span><span class="chip">.is_true()</span><span>, plus </span><span class="chip">Domain.TRUE</span><span> / </span><span class="chip">Domain.FALSE</span><span>.</span></td></tr><tr><td><span class="chip">expression.normalize_domain(d)</span></td><td><span>Internal: </span><span class="chip">Domain</span><span> objects normalize on construction.</span></td></tr><tr><td><span class="chip">expression.combine(op, unit, zero, ds)</span></td><td><span>Use Python operators on </span><span class="chip">Domain</span><span> instances.</span></td></tr><tr><td><span class="chip">expression.distribute_not</span><span>, </span><span class="chip">prettify_domain</span></td><td><span>Removed (were internal helpers).</span></td></tr></tbody></table>
+<h1 class="ch pb" id="ch-5">5. Testing and CI toolkit</h1>
+<a class="back" href="#contents">BACK TO CONTENTS</a>
+<h2><span class="b">Registry test mode is a context manager</span></h2>
+<pre class="code"># 19
+self.registry_enter_test_mode()
+try:
+    ...
+finally:
+    self.registry_leave_test_mode()
+
+# 20
+with self.registry_test_mode():
+    ...</pre>
+<h2><span class="b">Query assertions</span></h2>
+<ul class="bullets"><li><span class="chip" style="font-size:9.8pt">assertQueriesContain</span><span> is removed; </span><span class="chip" style="font-size:9.8pt">assertQueries</span><span> and </span><span class="chip" style="font-size:9.8pt">assertQueryCount</span><span> remain.</span></li></ul>
+<ul class="bullets"><li><span>New matcher </span><span class="chip" style="font-size:9.8pt">QueryLike</span><span> joins the family </span><span class="chip" style="font-size:9.8pt">Like</span><span> / </span><span class="chip" style="font-size:9.8pt">WhitespaceInsensitive</span><span> / </span><span class="chip" style="font-size:9.8pt">Approx</span><span> for parameterized or reformatted SQL expectations.</span></li></ul>
+<h2><span class="b">MockHTTPClient — new in 20</span></h2>
+<p><span>A composable context manager that patches </span><span class="chip" style="font-size:9.8pt">requests.sessions.Session.send</span><span>:</span></p>
+<pre class="code">from odoo.tests.common import MockHTTPClient
+
+with MockHTTPClient('POST', 'https://api.example.com/v1/items',
+                    return_json={"id": 1}) as mock:
+    self.env['my.integration'].push_items()
+mock.assert_called_once()</pre>
+<ul class="bullets"><li><span>Matching: </span><span class="chip" style="font-size:9.8pt">method</span><span>, </span><span class="chip" style="font-size:9.8pt">url</span><span> (host+path prefix, query optional), or a </span><span class="chip" style="font-size:9.8pt">matcher(request)</span><span> predicate for headers/body.</span></li></ul>
+<ul class="bullets"><li><span>Responses from </span><span class="chip" style="font-size:9.8pt">return_json</span><span> (sets </span><span class="chip" style="font-size:9.8pt">application/json</span><span>) or </span><span class="chip" style="font-size:9.8pt">return_body</span><span>; </span><span class="chip" style="font-size:9.8pt">return_status</span><span>/</span><span class="chip" style="font-size:9.8pt">return_headers</span><span> accept callables. Mocks nest: unmatched requests fall through to the outer mock or real </span><span class="chip" style="font-size:9.8pt">requests</span><span>.</span></li></ul>
+<ul class="bullets"><li><span>Call assertions: </span><span class="chip" style="font-size:9.8pt">mock.assert_called(n_times)</span><span>, </span><span class="chip" style="font-size:9.8pt">assert_called_once()</span><span>, </span><span class="chip" style="font-size:9.8pt">assert_not_called()</span><span>.</span></li></ul>
+<h2><span class="b">HttpCase additions</span></h2>
+<table><colgroup><col style="width:40.00%"/><col style="width:60.00%"/></colgroup><thead><tr><th>Helper (20.0)</th><th>Purpose</th></tr></thead><tbody><tr><td><span class="chip">self.session</span></td><td><span>Current </span><span class="chip">Session</span><span> of the test browser (new; 19 had no accessor).</span></td></tr><tr><td><span class="chip">update_session(**items)</span><span> / </span><span class="chip">update_session_context(**items)</span></td><td><span>Mutate and persist session values (and its context) between requests.</span></td></tr><tr><td><span class="chip">csrf_token()</span></td><td><span>Fetch a CSRF token for forged form posts.</span></td></tr><tr><td><span class="chip">file_read(path)</span></td><td><span>Classmethod returning file contents as </span><span class="chip">BinaryBytes</span><span> — pairs with the binary API of Volume I Ch. 4.</span></td></tr><tr><td><span class="chip">mock_datetime_and_now(dt)</span></td><td><span>Patches </span><span class="chip">datetime</span><span> helpers </span><span>and</span><span> </span><span class="chip">env.cr.now()</span><span> together, for sync-style tests.</span></td></tr><tr><td><span class="chip">response.raise_for_status()</span></td><td><span>Overridden to surface the Odoo error payload in the exception text.</span></td></tr></tbody></table>
+<h1 class="ch pb" id="ch-6">6. Grep-driven migration checklist</h1>
+<a class="back" href="#contents">BACK TO CONTENTS</a>
+<p><span>Run these greps over every custom addon; the right-hand side is the 20-clean replacement (volume reference where the topic is covered in depth).</span></p>
+<table><colgroup><col style="width:34.00%"/><col style="width:48.00%"/><col style="width:18.00%"/></colgroup><thead><tr><th>grep pattern</th><th>action in 20</th><th>see</th></tr></thead><tbody><tr><td><span class="chip">group_operator=</span></td><td><span>Rename kwarg to </span><span class="chip">aggregator=</span></td><td><span>II.4</span></td></tr><tr><td><span class="chip">check_access_rights(</span></td><td><span class="chip">has_access(</span><span> or </span><span class="chip">check_access(</span></td><td><span>I.2</span></td></tr><tr><td><span class="chip">check_access_rule(</span></td><td><span class="chip">check_access(</span></td><td><span>II.3</span></td></tr><tr><td><span class="chip">check_field_access_rights(</span></td><td><span class="chip">has_field_access(</span><span> / </span><span class="chip">check_field_access(</span></td><td><span>II.3</span></td></tr><tr><td><span class="chip">toggle_active</span></td><td><span class="chip">action_archive</span><span> / </span><span class="chip">action_unarchive</span></td><td><span>I.2</span></td></tr><tr><td><span class="chip">_check_recursion(</span></td><td><span class="chip">_has_cycle(</span></td><td><span>II.3</span></td></tr><tr><td><span class="chip">from odoo.osv import</span></td><td><span class="chip">from odoo.orm.domains import Domain</span></td><td><span>II.4</span></td></tr><tr><td><span class="chip">tools import ormcache</span></td><td><span class="chip">api.ormcache</span></td><td><span>II.2</span></td></tr><tr><td><span class="chip">ormcache_context</span></td><td><span>Drop; explicit cache-key arguments</span></td><td><span>II.2</span></td></tr><tr><td><span class="chip">tools import Query</span></td><td><span class="chip">odoo.orm.query import Query</span></td><td><span>II.2</span></td></tr><tr><td><span class="chip">convert_xml_import</span></td><td><span>Internal only; reimplement via </span><span class="chip">odoo.tools.convert</span><span> APIs</span></td><td><span>II.1</span></td></tr><tr><td><span class="chip">read_group(</span><span> with </span><span class="chip">lazy=</span></td><td><span>New </span><span class="chip">groupby/aggregates</span><span> signature</span></td><td><span>II.3</span></td></tr><tr><td><span class="chip">type='json'</span><span> route</span></td><td><span class="chip">type='jsonrpc'</span></td><td><span>I.5</span></td></tr><tr><td><span class="chip">ir.model.access.csv</span></td><td><span class="chip">ir.access.csv</span></td><td><span>I.1</span></td></tr><tr><td><span class="chip">assertQueriesContain</span></td><td><span class="chip">assertQueries</span><span> + </span><span class="chip">QueryLike</span></td><td><span>II.5</span></td></tr><tr><td><span class="chip">registry_enter_test_mode</span></td><td><span class="chip">registry_test_mode()</span><span> context</span></td><td><span>II.5</span></td></tr><tr><td><span class="chip">copy_translations(</span></td><td><span>Delete call; no replacement</span></td><td><span>II.3</span></td></tr><tr><td><span class="chip">pytz</span></td><td><span class="chip">datetime.UTC</span><span> / </span><span class="chip">zoneinfo</span></td><td><span>I.2</span></td></tr></tbody></table>
+<h1 class="ch pb" id="ch-7">7. Automated codemods: odoo-bin upgrade_code</h1>
+<a class="back" href="#contents">BACK TO CONTENTS</a>
+<p><span>Odoo ships a codemod repository at </span><span class="chip" style="font-size:9.8pt">odoo/upgrade_code/</span><span>. Each script is named </span><span class="chip" style="font-size:9.8pt">{version}-{seq}-{name}.py</span><span> and exposes </span><span class="chip" style="font-size:9.8pt">upgrade(file_manager)</span><span>; the </span><span class="chip" style="font-size:9.8pt">upgrade_code</span><span> CLI command (present in both 19 and 20, also runnable standalone) rewrites your addon sources in place — </span><span class="chip" style="font-size:9.8pt">.py</span><span>, </span><span class="chip" style="font-size:9.8pt">.js</span><span>, </span><span class="chip" style="font-size:9.8pt">.css</span><span>, </span><span class="chip" style="font-size:9.8pt">.scss</span><span>, </span><span class="chip" style="font-size:9.8pt">.xml</span><span>, </span><span class="chip" style="font-size:9.8pt">.csv</span><span>, </span><span class="chip" style="font-size:9.8pt">.po</span><span>, </span><span class="chip" style="font-size:9.8pt">.pot</span><span>.</span></p>
+<h2><span class="b">Running it</span></h2>
+<pre class="code"># all scripts for the 19 → 20 span, on your addons
+odoo-bin upgrade_code --from 19.0 --addons-path /path/to/addons
+
+# a single script (substring match is accepted)
+odoo-bin upgrade_code --script ir-access --addons-path /path/to/addons
+
+# standalone, without odoo-bin (resolved paths required)
+python3 odoo/cli/upgrade_code.py --from 19.0 --addons-path /path/to/addons</pre>
+<ul class="bullets"><li><span class="chip" style="font-size:9.8pt">--from</span><span> and </span><span class="chip" style="font-size:9.8pt">--script</span><span> are mutually exclusive and one is required; </span><span class="chip" style="font-size:9.8pt">--to</span><span> defaults to the running release and both bounds are inclusive — selection is by the version prefix of the script file name.</span></li></ul>
+<ul class="bullets"><li><span class="chip" style="font-size:9.8pt">--glob</span><span> narrows the file set; </span><span class="chip" style="font-size:9.8pt">--dry-run</span><span> prints the </span><span class="chip" style="font-size:9.8pt">updated:</span><span> / </span><span class="chip" style="font-size:9.8pt">deleted:</span><span> list without writing. The command exits with code 1 when any file changed, which makes it usable as a CI gate.</span></li></ul>
+<ul class="bullets"><li><span>The docstring is explicit: scripts are best-effort helpers for the heavy lifting, </span><span class="b">not silver bullets</span><span> — review the diff in a git checkout before upgrading the registry.</span></li></ul>
+<h2><span class="b">The script contract (write your own)</span></h2>
+<pre class="code">def upgrade(file_manager):
+    files = [f for f in file_manager if f.path.suffix == '.py']
+    for fileno, file in enumerate(files, start=1):
+        content = file.content            # lazy read
+        file.content = content.replace('old_api(', 'new_api(')
+        file_manager.print_progress(fileno, len(files))</pre>
+<ul class="bullets"><li><span>File objects expose </span><span class="chip" style="font-size:9.8pt">path</span><span> (pathlib), </span><span class="chip" style="font-size:9.8pt">addon</span><span> and a lazy </span><span class="chip" style="font-size:9.8pt">content</span><span> property; assigning an unchanged value is a no-op, assigning </span><span class="chip" style="font-size:9.8pt">None</span><span> deletes the file on save.</span></li></ul>
+<ul class="bullets"><li><span>The manager adds </span><span class="chip" style="font-size:9.8pt">get_modules()</span><span>, </span><span class="chip" style="font-size:9.8pt">get_file(module, name)</span><span>, </span><span class="chip" style="font-size:9.8pt">add_to_summary(msg)</span><span> (printed at the end) and </span><span class="chip" style="font-size:9.8pt">print_progress(current, total, file_name)</span><span>.</span></li></ul>
+<ul class="bullets"><li><span>Custom scripts must live inside </span><span class="chip" style="font-size:9.8pt">odoo/upgrade_code/</span><span> — </span><span class="chip" style="font-size:9.8pt">--script</span><span> resolves candidates there and refuses paths outside it, so drop your team rewrites into that directory (or call </span><span class="chip" style="font-size:9.8pt">migrate()</span><span> from Python).</span></li></ul>
+<h2><span class="b">Scripts selected for a 19 → 20 run</span></h2>
+<table><colgroup><col style="width:34.00%"/><col style="width:66.00%"/></colgroup><thead><tr><th>Script</th><th>What it rewrites</th></tr></thead><tbody><tr><td><span class="chip">17.5-01-tree-to-list</span></td><td><span>View mode </span><span class="chip">tree</span><span> → </span><span class="chip">list</span><span> in </span><span class="chip">view_mode</span><span>/binding fields and archs (the rename already landed in 19).</span></td></tr><tr><td><span class="chip">18.1-00-sql-constraint</span></td><td><span class="chip">_sql_constraints = [...]</span><span> → </span><span class="chip">models.Constraint(...)</span><span> assignments (Volume I, Ch. 2).</span></td></tr><tr><td><span class="chip">18.1-02-route-jsonrpc</span></td><td><span>Route kwarg </span><span class="chip">type='json'</span><span> → </span><span class="chip">type='jsonrpc'</span><span> (Volume I, Ch. 5).</span></td></tr><tr><td><span class="chip">18.2 / 18.3 l10n scripts</span></td><td><span>Chart-template records and fiscal-position tax mappings (</span><span class="chip">tax_src_id</span><span>/</span><span class="chip">tax_dest_id</span><span> → alternative-tax columns).</span></td></tr><tr><td><span class="chip">18.5-00-domain-dynamic-dates</span></td><td><span>Inlines unary-minus constants (</span><span class="chip">-1</span><span>) inside domains; </span><span class="chip">18.5-00-no-tax-tag-invert</span><span> fixes tax </span><span class="chip">formula</span><span> signs; </span><span class="chip">18.5-00-deprecated-properties</span><span> cleans deprecated property fields.</span></td></tr><tr><td><span class="chip">19.1-00-t-call</span></td><td><span>Hoists </span><span class="chip">t-set</span><span> nodes ahead of the </span><span class="chip">t-call</span><span>/</span><span class="chip">t-snippet-call</span><span> that consumes them — Owl 3 evaluation order (Volume I, Ch. 9).</span></td></tr><tr><td><span class="chip">19.3-00-account-groups</span></td><td><span class="chip">account.group</span><span> CSV/data → </span><span class="chip">account.account</span><span> hierarchy with a computed </span><span class="chip">parent_id</span><span> column (Volume I, Ch. 10).</span></td></tr><tr><td><span class="chip">19.3-00-account-report-foldable</span></td><td><span>Normalizes the </span><span class="chip">foldable</span><span> value of account report XML nodes to a boolean.</span></td></tr><tr><td><span class="chip">19.3-00-base64-in-xml</span></td><td><span>Migrates inline </span><span class="chip">type="base64" … file=</span><span> XML payloads to the 20 loading form.</span></td></tr><tr><td><span class="chip">19.4-00-ir-access</span></td><td><span>Merges </span><span class="chip">ir.model.access.csv</span><span> plus </span><span class="chip">&lt;record model="ir.rule"&gt;</span><span> XML into </span><span class="chip">security/ir.access.csv</span><span> with </span><span class="chip">crud</span><span> operation strings and normalized domains (Volume I, Ch. 1).</span></td></tr><tr><td><span class="chip">19.4-00-ormcache-on-transaction</span></td><td><span class="chip">registry.clear_cache</span><span> → </span><span class="chip">transaction.invalidate_ormcache</span><span> (this chapter’s sibling, Ch. 2).</span></td></tr><tr><td><span class="chip">19.5-00-tuple-rec_names_search</span></td><td><span class="chip">_rec_names_search = ['name']</span><span> → tuple form.</span></td></tr><tr><td><span class="chip">20.0-00-search-date-filters</span></td><td><span>Drops </span><span class="chip">start_month</span><span>/</span><span class="chip">end_month</span><span>-style range attributes from </span><span class="chip">date</span><span> search filters — no longer parsed, rejected by the RNG.</span></td></tr></tbody></table>
+<ul class="bullets"><li><span class="chip" style="font-size:9.8pt">owl3-migration.py</span><span>, </span><span class="chip" style="font-size:9.8pt">tools_etree.py</span><span> and </span><span class="chip" style="font-size:9.8pt">tools_js_expressions.py</span><span> carry no version prefix: they never enter a </span><span class="chip" style="font-size:9.8pt">--from/--to</span><span> range. The first is the Owl 3 JavaScript migration to trigger explicitly with </span><span class="chip" style="font-size:9.8pt">--script owl3-migration</span><span>; the other two are helper libraries the scripts import (</span><span class="chip" style="font-size:9.8pt">from odoo.upgrade_code.tools_etree import …</span><span>).</span></li></ul>
+<h2><span class="b">Suggested workflow</span></h2>
+<ul class="bullets"><li><span>Run </span><span class="chip" style="font-size:9.8pt">upgrade_code --from 19.0 --dry-run</span><span> first; then the real run on a clean git branch; review </span><span class="chip" style="font-size:9.8pt">git diff</span><span> file by file.</span></li></ul>
+<ul class="bullets"><li><span>Commit the codemod result </span><span class="b">before</span><span> the registry upgrade (</span><span class="chip" style="font-size:9.8pt">-u</span><span>): the scripts fix source code, not database rows — data upgrades remain the job of each module’s </span><span class="chip" style="font-size:9.8pt">pre/post</span><span> migration scripts.</span></li></ul>
+<ul class="bullets"><li><span>Re-run your test suite; the codemods cannot judge semantics (e.g. an </span><span class="chip" style="font-size:9.8pt">ir.rule</span><span> domain that 20 validates differently, Volume I, Ch. 1).</span></li></ul>
+<h1 class="ch pb" id="ch-8">8. Appendix A — verification log</h1>
+<a class="back" href="#contents">BACK TO CONTENTS</a>
+<p><span>Branches compared on 2026-10-11: </span><span class="chip" style="font-size:9.8pt">odoo/odoo@19.0</span><span> and </span><span class="chip" style="font-size:9.8pt">odoo/odoo@20.0</span><span>.</span></p>
+<ul class="bullets"><li><span class="chip" style="font-size:9.8pt">odoo/release.py</span><span> — </span><span class="chip" style="font-size:9.8pt">MIN_PY_VERSION</span><span> (3,10) vs (3,12).</span></li></ul>
+<ul class="bullets"><li><span class="chip" style="font-size:9.8pt">odoo/</span><span> directory listings — </span><span class="chip" style="font-size:9.8pt">osv</span><span> present in 19 only; </span><span class="chip" style="font-size:9.8pt">http.py</span><span> → </span><span class="chip" style="font-size:9.8pt">http/</span><span>; </span><span class="chip" style="font-size:9.8pt">orm/</span><span> gains </span><span class="chip" style="font-size:9.8pt">cache.py</span><span>, </span><span class="chip" style="font-size:9.8pt">models_cached.py</span><span>, </span><span class="chip" style="font-size:9.8pt">query.py</span><span>.</span></li></ul>
+<ul class="bullets"><li><span class="chip" style="font-size:9.8pt">odoo/tools/__init__.py</span><span> — export diff (Query, ormcache, convert_* removed; SQL, BinaryValue, BinaryBytes, drop_view_if_exists added).</span></li></ul>
+<ul class="bullets"><li><span class="chip" style="font-size:9.8pt">odoo/orm/models.py</span><span> — method-set diff (access checks, </span><span class="chip" style="font-size:9.8pt">_has_cycle</span><span>, </span><span class="chip" style="font-size:9.8pt">read_group</span><span> signatures).</span></li></ul>
+<ul class="bullets"><li><span class="chip" style="font-size:9.8pt">odoo/orm/fields.py</span><span> — </span><span class="chip" style="font-size:9.8pt">group_operator</span><span> warning in 19, absence in 20; </span><span class="chip" style="font-size:9.8pt">Domain.custom</span><span> deprecation → </span><span class="chip" style="font-size:9.8pt">TypeError</span><span>.</span></li></ul>
+<ul class="bullets"><li><span class="chip" style="font-size:9.8pt">odoo/orm/domains.py</span><span> vs </span><span class="chip" style="font-size:9.8pt">odoo/osv/expression.py</span><span> — helper mapping.</span></li></ul>
+<ul class="bullets"><li><span class="chip" style="font-size:9.8pt">odoo/tests/common.py</span><span> — test-mode context manager, </span><span class="chip" style="font-size:9.8pt">MockHTTPClient</span><span>, </span><span class="chip" style="font-size:9.8pt">QueryLike</span><span>, HttpCase session helpers.</span></li></ul>
+<ul class="bullets"><li><span class="chip" style="font-size:9.8pt">odoo/sql_db.py</span><span> — </span><span class="chip" style="font-size:9.8pt">execute()</span><span> signature accepting </span><span class="chip" style="font-size:9.8pt">SQL | LiteralString | Composable</span><span>.</span></li></ul>
+<ul class="bullets"><li><span class="chip" style="font-size:9.8pt">odoo/cli/upgrade_code.py</span><span> and the </span><span class="chip" style="font-size:9.8pt">odoo/upgrade_code/</span><span> script list on both branches — command flags, file-manager contract and per-script behaviour quoted in Chapter 7.</span></li></ul>
+<p><span>Enterprise-only deltas (payroll, budget, field service, helpdesk) are not verifiable from the public tree and are intentionally left to Volume I’s mapping tables and your Enterprise source review.</span></p>
+</body></html>
