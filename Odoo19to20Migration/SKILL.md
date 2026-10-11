@@ -11,10 +11,12 @@ tags: [odoo, migration, upgrade, orm, security, views, qweb, owl, testing, codem
 # Odoo 19 → 20 Migration
 
 ## Goal
+
 Take a 19.0 custom addon (or a whole addons tree) to 20.0 with no leftover
 19-only API, using automated codemods first and verified manual mappings second.
 
 ## Sources (authoritative)
+
 - `references/*.md` in this skill — condensed, source-verified tables from the
   companion cookbooks (Volume I fixed edition + Volume II "Closing the Gaps").
 - Upstream trees: github.com/odoo/odoo branches `19.0` and `20.0`.
@@ -25,6 +27,7 @@ Take a 19.0 custom addon (or a whole addons tree) to 20.0 with no leftover
   them as verified.
 
 ## Workflow
+
 1. **Triage** — run the bundled scanner over the addons path:
    `python3 scripts/scan_addon.py /path/to/addons` (add `--json` for machines,
    `--addon NAME` to narrow). Read the report; it groups findings by file with
@@ -48,6 +51,7 @@ Take a 19.0 custom addon (or a whole addons tree) to 20.0 with no leftover
    reference anchor used), remaining [EE-verify] items, test status.
 
 ## Hard rules
+
 - Do not invent XML-IDs or method names: look them up in the 20.0 tree (or the
   mapping tables, which cite their source file). Unverifiable EE ids stay
   flagged, never silently "completed".

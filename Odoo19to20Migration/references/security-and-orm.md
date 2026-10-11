@@ -1,15 +1,19 @@
 # Security & ORM (19 → 20)
 
 ## 1. The security file: `ir.model.access.csv` + `ir.rule` XML → `security/ir.access.csv`
+
 Odoo 20 loads **only** `ir.access.csv`. `ir.model.access.csv` is ignored and
 `<record model="ir.rule">` in XML raises `KeyError: 'ir.rule'`.
 
 19 (`security/ir.model.access.csv`):
+
 ```csv
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_lock,lock,model_my_lock,base.group_user,1,1,1,0
 ```
+
 20 (`security/ir.access.csv`):
+
 ```csv
 id,name,model_id,group_id/id,operation,domain
 access_my_lock,my.lock,my.lock,base.group_user,cru,
@@ -23,6 +27,7 @@ access_my_lock,my.lock,my.lock,base.group_user,cru,
 | `domain` | record-rule domain, or empty |
 
 Further rules on this file:
+
 - 19 `model_id/id` → 20 `model_id` (technical name, no module prefix).
 - Domains `[(1,'=',1)]` / `[('1','=','1')]` fail validation → use empty domain.
 - Domain on a non-stored field raises *Field has no SQL representation* → use stored field/path.
@@ -50,6 +55,7 @@ Further rules on this file:
 | `mail.thread.cc` | `mail.thread` |
 
 Constraint example (20):
+
 ```python
 _code_uniq = models.Constraint(
     'unique(code, company_id)',
@@ -58,6 +64,7 @@ _code_uniq = models.Constraint(
 ```
 
 ## 3. Search & domains
+
 - `_name_search` → `_rec_names_search` (tuple in 20, codemod `19.5`) and/or `_search_display_name`.
 - `from odoo.osv import expression` → **import error**; use `from odoo.orm.domains import Domain`.
 - `expression.AND/OR` → `Domain.AND/OR` (or `&`/`|`); `expression.is_false(m,d)` → `Domain(d).is_false()`;

@@ -1,6 +1,7 @@
 # Volume-II API deltas (runtime, cache, model API, fields, tests)
 
 ## Runtime & imports
+
 - Python floor: 19 ≥ 3.10 → **20 ≥ 3.12** (`odoo/release.py MIN_PY_VERSION`); core uses PEP 695 generics.
 - `odoo/http.py` → `odoo/http/` package (imports unchanged); `odoo/osv/` **removed**;
   `odoo.models|fields|api` are shim packages in both versions → `from odoo import models, fields, api` stays canonical.
@@ -9,6 +10,7 @@
   Replacements: `from odoo.orm.query import Query`; `@api.ormcache`; converts are internal.
 
 ## Cache & SQL
+
 - `from odoo.tools import ormcache` (19) → `@api.ormcache(...)` (20; class in `odoo/orm/cache.py`,
   optional `cache='stable'`); `ormcache_context` removed — fold context into explicit args.
 - Introspection: `odoo.orm.cache.get_cache_size / get_cache_key_counter / log_ormcache_stats`.
@@ -17,6 +19,7 @@
 - `cr.execute` (20): `SQL | LiteralString | Composable`; `params` must be None with `SQL`.
 
 ## Model API deltas
+
 | 19 | 20 |
 |---|---|
 | `check_access_rule(op)` | folded into `check_access(op)` / `has_access(op)` |
@@ -27,12 +30,14 @@
 | `copy_translations(records)` | removed, no public replacement |
 
 ## Fields & domains
+
 - `group_operator=` removed (19 warned "Since Odoo 18…") → `aggregator=`.
 - Domain leaf with raw SQL: 19 DeprecationWarning → 20 `TypeError` → `Domain.custom(to_sql=lambda table: SQL(...))`.
 - `odoo.osv.expression` helpers → `Domain`: `AND/OR` → `Domain.AND/OR`; `is_false(m,d)` → `Domain(d).is_false()`;
   `normalize_domain` internal; `combine` → `&`/`|`; `distribute_not`/`prettify_domain` gone.
 
 ## Testing & CI
+
 - `registry_enter_test_mode()/registry_leave_test_mode()` → `with self.registry_test_mode():`.
 - `assertQueriesContain` removed; `assertQueries`/`assertQueryCount` remain; new matcher `QueryLike`
   (family: `Like`, `WhitespaceInsensitive`, `Approx`).
@@ -43,6 +48,7 @@
   `file_read(path) -> BinaryBytes`, `mock_datetime_and_now(dt)`, `response.raise_for_status()` with Odoo payload.
 
 ## Grep checklist (pattern → action, see=reference)
+
 `group_operator=`→`aggregator=`(this file) · `check_access_rights(`→`has_access/check_access`(security-and-orm) ·
 `check_access_rule(`→`check_access`(this file) · `toggle_active`→archive actions(security-and-orm) ·
 `_check_recursion(`→`_has_cycle(`(this file) · `from odoo.osv import`→`odoo.orm.domains`(security-and-orm) ·

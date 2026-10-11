@@ -5,6 +5,7 @@ An agent skill (Claude/agent-skills `SKILL.md` format, compatible with the
 to **20.0**, CE and EE.
 
 ## Contents
+
 ```
 Odoo19to20Migration/
 ├── SKILL.md                      # frontmatter + workflow + hard rules
@@ -16,10 +17,13 @@ Odoo19to20Migration/
 │   ├── api-deltas-vol2.md        # runtime/imports, cache & SQL, model API, fields, tests
 │   └── upgrade-code.md           # odoo-bin upgrade_code usage + script contract
 └── scripts/
-    └── scan_addon.py             # stdlib scanner, CI-friendly exit code
+    ├── scan_addon.py             # stdlib scanner, CI-friendly exit code
+    ├── check_markdown.py         # markdown compatibility linter for these docs
+    └── normalize_markdown.py     # inserts missing blank lines at block boundaries
 ```
 
 ## Install
+
 - **odoo-agent-pro-kit plugin**: copy the folder into `plugin/skills/`
   (`plugin/skills/Odoo19to20Migration/`).
 - **Claude Code / generic agent skills**: copy into your skills directory
@@ -27,6 +31,7 @@ Odoo19to20Migration/
 - No dependencies: the scanner is Python stdlib; the skill itself is markdown.
 
 ## Use
+
 1. Triage an addons tree:
    `python3 Odoo19to20Migration/scripts/scan_addon.py /path/to/addons`
    (`--addon my_module`, `--json`, `--quiet`; exit 1 = findings).
@@ -36,6 +41,7 @@ Odoo19to20Migration/
    → validate (`-u` + tests) → report.
 
 ## Provenance
+
 Tables are condensed from the companion cookbooks (Volume I fixed edition +
 Volume II *Closing the Gaps*), whose entries were verified against the
 `odoo/odoo` branches `19.0`/`20.0` on 2026-10-11. Enterprise-only rows carry

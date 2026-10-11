@@ -4,6 +4,7 @@ Models / fields / xml-ids per module family. **[EE-verify]** = Enterprise-only,
 confirm against the Enterprise 20.0 tree.
 
 ## Models
+
 | 19 | 20 |
 |---|---|
 | `hr.contract` | `hr.version` (contract data via employee versions) |
@@ -25,6 +26,7 @@ confirm against the Enterprise 20.0 tree.
 | `mail.tracking.value` (core `mail`) | `mail_tracking` addon |
 
 ## Fields
+
 | Model(s) | 19 | 20 |
 |---|---|---|
 | `sale.order` | `state='done'` | removed |
@@ -47,6 +49,7 @@ confirm against the Enterprise 20.0 tree.
 | `mrp.production` | `show_produce_all` | removed (`button_mark_done`) |
 
 ## XML ids & views
+
 | 19 | 20 |
 |---|---|
 | `project.portal_my_home` | `portal.entry` |
@@ -64,6 +67,7 @@ confirm against the Enterprise 20.0 tree.
 | EE salary rule `category_id`/`struct_id` | `category_ids`/`struct_ids` / `[(6, 0, [ref(...)])]` **[EE-verify]** |
 
 ## Symptom index (quick)
+
 - `KeyError: 'ir.rule'` on install → security file not converted (ch. security-and-orm).
 - `Field has no SQL representation` → rule domain on non-stored field.
 - `RuntimeError: request not bound` → `request.env`/`request.website` in model/report code.

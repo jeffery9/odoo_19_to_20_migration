@@ -1,6 +1,7 @@
 # Binary, Excel, PDF, time · HTTP & mail (19 → 20)
 
 ## Binary / Excel / PDF / time
+
 | Odoo 19 | Odoo 20 |
 |---|---|
 | `xlwt` | `xlsxwriter`; write into `io.BytesIO`, `{'in_memory': True}`, assign with `BinaryBytes` |
@@ -15,6 +16,7 @@
 | `resource.calendar.tz`, attendance `name`/`day_period` | removed |
 
 ## Configuration, HTTP, mail
+
 | Odoo 19 | Odoo 20 |
 |---|---|
 | `@http.route(..., type='json')` (web-client routes) | `type='jsonrpc'` (codemod `18.1-02`). External JSON-2 `/json/2/<model>/<method>` unchanged |
@@ -26,6 +28,7 @@
 | `request.website` in model methods | `self.env.website` (from `context['website_id']`); `request` unbound in parsers/ORM contexts |
 
 ## SQL reports
+
 - `Model._table_query` → `Model._table_sql` property returning an `SQL` object.
 - `SQL` composable: unchanged class (`odoo/tools/sql.py`), now public via `odoo.tools`;
   `cr.execute(SQL(...))` must not receive `params`.

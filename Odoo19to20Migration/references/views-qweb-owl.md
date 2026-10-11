@@ -1,6 +1,7 @@
 # Views, QWeb, Owl 3 (19 → 20)
 
 ## Kanban → cards
+
 | Odoo 19 | Odoo 20 |
 |---|---|
 | `project.view_project_kanban` body | `project.view_project_card` |
@@ -9,6 +10,7 @@
 | `project.view_task_kanban` uses | `card_ids="%(project.view_task_card)d"` |
 
 ## Ribbons & button icons
+
 | Odoo 19 | Odoo 20 |
 |---|---|
 | `<button icon="fa-check"/>` | `<button icon="check"/>` — names from `web/icons.py` |
@@ -17,6 +19,7 @@
 | `iconFromString` with `fa-` names | does not draw; use `oi`/`data-icon` |
 
 ## Form/view xpaths (verified against 20.0 CE views)
+
 | Form | 19 xpath | 20 |
 |---|---|---|
 | Analytic account | `//header` | no header — insert `<header>` with workflow buttons |
@@ -44,6 +47,7 @@ match — convert inherits only once the 20 parent class string no longer equals
 xpath cannot enter a `t-call` body — inherit the called template or xpath the `t-call` node.
 
 ## QWeb & reports
+
 - wkhtmltopdf no longer assumed inside `web`: modules `base_report_wkhtmltox` /
   `base_report_paper_muncher` (verify availability in your deployment).
 - `<img t-attf-src="data:image/png;base64,#{rec.img}"/>` →
@@ -51,6 +55,7 @@ xpath cannot enter a `t-call` body — inherit the called template or xpath the 
 - `_render_qweb_pdf` takes the report **action** xmlid.
 
 ## Owl 3
+
 - `t-set` nodes consumed by a `t-call`/`t-snippet-call` attribute must be hoisted
   **before** the call (codemod `19.1-00-t-call`).
 - `DropdownItem` takes `attrs=`; `href=` and `dataset=` are invalid props.

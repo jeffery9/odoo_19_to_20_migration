@@ -5,18 +5,21 @@ Codemod repo at `odoo/upgrade_code/`; scripts `{version}-{seq}-{name}.py` expose
 Rewrites addon sources in place: `.py .js .css .scss .xml .csv .po .pot`.
 
 ## Commands
+
 ```bash
 odoo-bin upgrade_code --from 19.0 --addons-path /path/to/addons        # all scripts in [19.0, current]
 odoo-bin upgrade_code --script ir-access --addons-path /path/to/addons # single script (substring ok)
 odoo-bin upgrade_code --from 19.0 --glob '**/models/*.py' --dry-run    # preview
 python3 odoo/cli/upgrade_code.py --from 19.0 --addons-path ...         # standalone (resolved paths)
 ```
+
 - `--from`/`--script` mutually exclusive, one required; `--to` inclusive, default = running release.
 - Prints `updated:`/`deleted:` per file; **exit code 1 when anything changed** (CI gate).
 - Best-effort helpers, "not silver bullets": review `git diff` on a clean branch first.
 - Codemods fix source only; DB data upgrades stay in module `pre/post` scripts.
 
 ## Scripts selected for a 19 → 20 run
+
 | Script | Rewrites |
 |---|---|
 | `17.5-01-tree-to-list` | view mode `tree`→`list` (view_mode/binding fields, archs) |
@@ -38,6 +41,7 @@ No version prefix (never auto-selected): `owl3-migration.py` (run via
 (importable as `odoo.upgrade_code.tools_etree` etc.).
 
 ## Writing your own script
+
 ```python
 def upgrade(file_manager):
     files = [f for f in file_manager if f.path.suffix == '.py']
@@ -46,6 +50,7 @@ def upgrade(file_manager):
         file.content = content.replace('old_api(', 'new_api(')
         file_manager.print_progress(fileno, len(files))
 ```
+
 - File object: `path` (pathlib), `addon`, lazy `content` (assign unchanged = no-op;
   assign `None` = delete on save).
 - Manager: iteration, `len`, `get_modules()`, `get_file(module, name)`,
@@ -54,5 +59,6 @@ def upgrade(file_manager):
   paths outside it); alternatively call `odoo.cli.upgrade_code.migrate(...)` from Python.
 
 ## Suggested workflow
+
 1. `--dry-run` → 2. real run on clean branch → 3. review/commit diff →
 4. `-u` registry upgrade + tests → 5. re-run this skill's scanner (expect 0).
