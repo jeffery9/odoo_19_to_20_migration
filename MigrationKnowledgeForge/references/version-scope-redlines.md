@@ -67,7 +67,8 @@ A change enters the X→Y artifact **only if it first appears at ≥ X.0 and ≤
 | `product.packaging` model **removed** (+ `product.template.packaging_ids`) | **18 → 19** | source: present 18.0, absent 19.0 / EE |
 | `res.partner.mobile` field **removed** (use `phone`) | **18 → 19** | source: present 18.0, absent 19.0 |
 | `stock.picking.move_ids_without_package` / `move_line_ids_without_package` / `date` / `group_id` **removed** | **18 → 19** | source: present 18.0, absent 19.0 |
-| `procurement.group`; `account.fiscal.position.tax` models **removed** | **18 → 19** | source: present 18.0, absent 19.0 |
+| `procurement.group`; `account.fiscal.position.tax` models **removed** (procurement.group removal also drops `stock.move.group_id`, `stock.picking.group_id`, `sale.order.procurement_group_id`) | **18 → 19** | source: present 18.0, absent 19.0 |
+| `stock.reference` model **added** (document reference chain: `move_ids` m2m + computed `picking_ids`) | **18 → 19** | source: `addons/stock/models/stock_reference.py`, absent 18.0. NOT a replacement for `procurement.group` |
 | `res.users.groups_id` → `group_ids` (field renamed) | **18 → 19** | source: 18.0 `groups_id`, 19.0 `group_ids` |
 | `is_storable` **relocated** `stock` → `product` core (field exists since 18.0) | **19 → 20** | source: 18.0 stock/product.py, 20.0 product/product_template.py |
 | `account.group`; `stock.scrap`; `hr.leave.type`; `hr.version.wizard`; `hr.contract.type`; `mail.thread.cc`; `payment.provider`; `res.bank`; `product.template.attribute.exclusion` models **removed** | **19 → 20** | source: present 19.0, absent 20.0 |
@@ -112,6 +113,9 @@ These must **not** be dragged into the named pair; they belong where stated:
 - `crossovered.budget` → `budget.analytic` → **17→18** (NOT 19→20). The whole EE `account_budget` family was rebuilt at 18.0 (`kept=0`); 19.0 and 20.0 already use `budget.analytic` only.
 - `hr.payslip.input.type` removal → **19→20** (correct pair, EE only). It was **merged into `hr.salary.rule`**, not renamed to a new input-type model; `input_usage_payslip` is an older boolean field on `hr.salary.rule`, so citing it as "the replacement" is wrong. Also not owned by 18→19.
 - Stale `i18n/*.po` entries are **not** model evidence: 18.0 `account_budget/i18n/*.po` still contains `crossovered_budget` long after the `.py` models were removed. Always `git grep` the `*.py` sources.
+- `procurement.group` → `stock.reference` → **NOT a rename.** `procurement.group` is a procurement grouping (groups moves of one SO into pickings) and is **removed** at 18→19; `stock.reference` is a **newly added** document-reference chain (`_description = 'Reference between stock documents'`, `move_ids` m2m + computed `picking_ids`). Different purpose, same pair — do not map one onto the other.
+- `note.note` → `project.task` → **never existed**: `note.note` is absent from 17.0/18.0/19.0/20.0. Do not list it anywhere.
+- `project.task.user_id` → `user_ids` → **not a change at all** (`user_ids` exists since 16.0).
 
 ## How to extend this file
 
