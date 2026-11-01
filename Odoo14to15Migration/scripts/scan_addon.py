@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scan Odoo addons for 14-only / 15-breaking APIs that Odoo 15 renamed/removed.
+"""Scan Odoo addons for 14-only / 15-breaking APIs that Odoo 15 changed.
 
 Part of the odoo_14_to_15_migration skill. Stdlib only.
 Usage:
@@ -11,20 +11,19 @@ bundled `odoo-bin upgrade_code` codemod fixes it, and the reference file.
 IMPORTANT — version scope / red lines:
   15.0 has NO `upgrade_code` codemod module (the engine only exists from 18.0+).
   So EVERY finding here is 'manual' — there is no automated rewrite for 14->15.
-  Also, do NOT flag 13->14 concerns here: ir.actions.* access removal,
-  invisible/readonly dynamic-expression -> attrs, _name_search returns ids,
-  _compute_display_name, force_company, Char size, selection_add ondelete,
-  TransientModel ACL, stock.picking field rename — those belong to the 13->14
-  skill. This scanner only looks for 14->15 breaks:
-    t-raw removal (-> t-out/t-esc + markupsafe.Markup)            #01875541b1a8
-    ir.model* direct access removal (ir.model, ir.model.fields,  #69120
-        ir.model.data) -> sudo() / model API
-    mail.template Jinja -> QWeb body + inline_template {{ }}      #77074
-    ES modules -> *.esm.js rename (/** @odoo-module **/)
-    JS/SCSS assets from XML templates -> __manifest__.py assets  (qweb key removed)
-    SavepointCase -> TransactionCase                             #62031
-    Environment.manage() removal
-    subtype -> subtype_xmlid [verify]
+
+  Verified against the Odoo CE 14.0 / 15.0 source tree. Several widely repeated
+  claims are WRONG for this version pair and are therefore NOT scanned here:
+    * `subtype` -> `subtype_xmlid` is a 13->14 change; 14.0 and 15.0 have the
+      same `message_post` signature.
+    * 15.0 did NOT remove `ir.model` / `ir.model.fields` access. What changed is
+      the `ir.model.data` lookup API (public methods private-ised or dropped).
+    * `t-raw` / `t-esc` / `SavepointCase` / `Environment.manage()` are DEPRECATED
+      in 15.0, not removed (t-raw is actually removed in 16.0).
+
+  Also do NOT flag 13->14 concerns (ir.actions.* access, attrs, _name_search,
+  force_company, TransientModel ACL) nor 15->16 ones (payment.acquirer,
+  coupon->loyalty, stock.production.lot->stock.lot).
 """
 import argparse
 import json
@@ -34,33 +33,50 @@ from pathlib import Path
 
 # id, extensions, regex, mode(always 'manual' for 14->15), fix, reference
 PATTERNS = [
-    # --- t-raw removed (-> t-out / t-esc) --------------------------------
+    # --- QWeb directives deprecated (removed in 16.0) --------------------
     ('t-raw', {'xml', 'js', 'py'}, re.compile(r't-raw'),
-     'manual', "t-raw removed in 15.0 — use t-out (no escape, equals old t-raw) or t-esc (HTML-escape); wrap trusted server HTML in markupsafe.Markup for t-out", 'views-qweb.md'),
+     'manual', "t-raw is DEPRECATED in 15.0 (still renders, warns; removed only in 16.0) — use t-out, but t-out ESCAPES by default: only markupsafe.Markup values render as HTML. fields.Html values are Markup; Char/Text are not", 'views-qweb.md'),
 
-    # --- ir.model* direct access removal (#69120) ------------------------
-    ('ir-model-access', {'py', 'xml'}, re.compile(r'[\'"]ir\.model(?:\.fields|\.data)?[\'"]'),
-     'manual', "ir.model / ir.model.fields / ir.model.data direct access removed in 15.0 (#69120) — use sudo() or the model's own API (_fields, _xmlid_lookup, _get_id). NOTE: this is a DIFFERENT object from the 13->14 ir.actions.* removal", 'orm-api.md'),
+    ('t-esc', {'xml'}, re.compile(r't-esc='),
+     'manual', "t-esc is deprecated in 15.0 — use t-out. Plain strings are escaped either way; Markup values are not double-escaped", 'views-qweb.md'),
 
-    # --- mail.template Jinja -> QWeb / inline_template (#77074) ----------
+    # --- ir.model.data lookup API (NOT an access-control change) ---------
+    ('ir-model-data-api', {'py'}, re.compile(r'xmlid_lookup|xmlid_to_res_id|xmlid_to_res_model_res_id|xmlid_to_object|get_object_reference'),
+     'manual', "ir.model.data lookups were private-ised/removed in 15.0 — prefer env.ref('module.xmlid'), else _xmlid_to_res_id / _xmlid_to_res_model_res_id. xmlid_to_object / get_object_reference were REMOVED; _get_id(module, xml_id) was REMOVED too (do not use it as the fix)", 'orm-api.md'),
+
+    # --- mail rendering engines ------------------------------------------
+    ('engine-jinja', {'py'}, re.compile(r"engine\s*=\s*['\"]jinja['\"]"),
+     'manual', "engine='jinja' raises ValueError in 15.0 — allowed engines are inline_template / qweb / qweb_view, and the default changed to inline_template", 'http-rpc-mail.md'),
+
     ('jinja-mail', {'xml', 'py'}, re.compile(r'\$\{'),
-     'manual', "Jinja/Python-format ${...} in mail.template replaced by QWeb (type='qweb', body uses t-out/t-esc) + inline_template {{ }} for subject/email_from/email_to in 15.0 (#77074)", 'http-rpc-mail.md'),
+     'manual', "Jinja ${...} is gone in 15.0 — body_html renders as QWeb (field declares render_engine='qweb', data XML uses type=\"html\"), single-line fields use inline_template {{ }} (#77074)", 'http-rpc-mail.md'),
 
-    # --- assets moved into __manifest__.py `assets` key; `qweb` key gone --
+    # --- assets moved into __manifest__.py `assets` key ------------------
     ('qweb-key', {'py'}, re.compile(r'[\'"]qweb[\'"]\s*:\s*\['),
-     'manual', "the 'qweb' __manifest__.py key is removed in 15.0 — move QWeb template lists and JS/SCSS assets into the 'assets' key (web.assets_qweb / web.assets_backend / web.assets_frontend). Paths are repo-relative", 'models-mapping.md'),
+     'manual', "the 'qweb' __manifest__.py key is IGNORED in 15.0 (no error, templates silently do not load) — move QWeb template lists and JS/SCSS into the 'assets' key; paths are repo-relative", 'models-mapping.md'),
 
-    # --- SavepointCase -> TransactionCase (#62031) -----------------------
+    # --- test base class --------------------------------------------------
     ('savepoint-case', {'py'}, re.compile(r'SavepointCase'),
-     'manual', "SavepointCase alias removed in 15.0 (#62031) — use TransactionCase", 'orm-api.md'),
+     'manual', "SavepointCase is a deprecated alias in 15.0 whose base changed from SingleTransactionCase to TransactionCase — use TransactionCase and re-check tests relying on class-level state (#62031)", 'orm-api.md'),
 
-    # --- Environment.manage() removal ------------------------------------
-    ('env-manage', {'py'}, re.compile(r'Environment\.manage\(|env\.manage\(|\.manage\(\)'),
-     'manual', "Environment.manage() no longer needed in 15.0 — create Environment(cr, uid, context) directly", 'orm-api.md'),
+    ('env-manage', {'py'}, re.compile(r'Environment\.manage'),
+     'manual', "Environment.manage() is a no-op in 15.0 (warns and yields) — delete it and create Environment(...) directly", 'orm-api.md'),
 
-    # --- subtype -> subtype_xmlid [verify] -------------------------------
-    ('subtype-xmlid', {'py', 'xml'}, re.compile(r'subtype\s*='),
-     'manual', "message_post/message_notify/notify subtype= -> subtype_xmlid= in 15.0 [verify] — single community source disagrees; confirm target is an xmlid before relying on it", 'http-rpc-mail.md'),
+    # --- core business models -------------------------------------------
+    ('payment-method-m2m', {'py', 'xml'}, re.compile(r'(inbound|outbound)_payment_method_ids'),
+     'manual', "journal payment methods became one2many rows in 15.0 — inbound/outbound_payment_method_ids -> *_payment_method_line_ids (model account.payment.method.line, with payment_account_id + sequence)", 'models-mapping.md'),
+
+    ('amount-by-group', {'py', 'xml', 'js'}, re.compile(r'amount_by_group'),
+     'manual', "amount_by_group was removed from account.move and sale.order in 15.0 — use tax_totals_json / the tax_totals widget", 'models-mapping.md'),
+
+    ('tax-exigible', {'py', 'xml'}, re.compile(r'tax_exigible'),
+     'manual', "account.move.line.tax_exigible was removed in 15.0 — use account.move.always_tax_exigible; tax_fiscal_country_id moved to account.move.tax_country_id", 'models-mapping.md'),
+
+    ('stock-inventory', {'py', 'xml'}, re.compile(r'stock\.inventory'),
+     'manual', "stock.inventory / stock.inventory.line were removed in 15.0 — count on stock.quant (inventory_quantity, inventory_quantity_set, inventory_date) + stock.inventory.adjustment.name, then action_apply_inventory()", 'models-mapping.md'),
+
+    ('phone-validation-mixin', {'py'}, re.compile(r'phone\.validation\.mixin'),
+     'manual', "phone.validation.mixin was removed in 15.0 — call the phone_validation helpers instead of inheriting the mixin", 'models-mapping.md'),
 ]
 
 
@@ -126,7 +142,8 @@ def main():
         print(f"\nSUMMARY: {len(findings)} finding(s) — ALL manual (15.0 has NO upgrade_code codemod).")
         if findings:
             print('NEXT: apply manual mappings from references/* -> git diff review -> re-scan (expect 0). '
-                  'Write custom data migrations (subtype_xmlid xmlid, asset moves) in module migrations/15.0/.')
+                  'Deprecation warnings (t-raw, SavepointCase) only appear with --dev=all; assets and '
+                  'rich-text widgets need a manual visual check.')
     sys.exit(1 if findings else 0)
 
 
