@@ -1,6 +1,6 @@
 # 修复说明 — Odoo_Migration_Cookbook_19_to_20
 
-修复产物:`Odoo_Migration_Cookbook_19_to_20_fixed.pdf`(50 页,A4,与原版式同风格)
+修复产物:`pdf/Odoo_Migration_Cookbook_19_to_20_fixed.pdf`(50 页,A4,与原版式同风格)
 
 ## 一、问题原因
 

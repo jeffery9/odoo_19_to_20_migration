@@ -35,8 +35,9 @@ odoo_migration/
 ├── Core_Models_Changelog.md                    # 核心业务模型跨版本(5→20)变更追踪总表（全局索引）
 ├── scripts/                                    # 跨版本工具
 │   └── diff_core_models.py                       # 模型/字段 diff：比对两版本分支的 _name / _inherit / fields.X 变化
-├── Odoo_Migration_Cookbook_19_to_20_fixed.pdf    # 烹饪书 第一卷（修复版，50 页 A4）
-├── Odoo_Migration_Cookbook_19_to_20_Vol2_Closing_the_Gaps.pdf  # 烹饪书 第二卷《Closing the Gaps》
+├── pdf/                                        # 成品 PDF（排版产物，不参与正文修订）
+│   ├── Odoo_Migration_Cookbook_19_to_20_fixed.pdf    # 烹饪书 第一卷（修复版，50 页 A4）
+│   └── Odoo_Migration_Cookbook_19_to_20_Vol2_Closing_the_Gaps.pdf  # 烹饪书 第二卷《Closing the Gaps》
 ├── Odoo_Migration_Cookbook_14_to_15.md            # 烹饪书 14→15（单卷原创，12 章）
 ├── Odoo_Migration_Cookbook_13_to_14.md            # 烹饪书 13→14（单卷原创，12 章）
 ├── Odoo_Migration_Cookbook_12_to_13.md            # 烹饪书 12→13（单卷原创，13 章）
@@ -208,8 +209,8 @@ odoo_migration/
 | `Odoo_Migration_Cookbook_7_to_8.md` | 7.0 → 8.0 | 单卷原创烹饪书（15 章）：导言与版本作用域、完整 New API（头号断裂，`osv`→`models` 导入、`self.env`、`@api.multi` / `@api.model` / `@api.one` / `@api.depends` / `@api.constrains`、recordset 运算、`osv.except_osv`→`UserError`、字段改为类属性）、`self.pool`→`self.env`、`osv.Model`→`models.Model` 基类、`QWeb` 报表引入。基于 OCA 8.0 官方指南 + 多社区源交叉核实，与 `Odoo7to8Migration/` 技能事实对齐。 |
 | `Odoo_Migration_Cookbook_6_to_7.md` | 6.0 → 7.0 | 单卷原创烹饪书（14 章）：导言与版本作用域、`res.partner.address` 模型移除（头号断裂，地址合并进 `res.partner`）、`__manifest__.py` `update_xml`→`data` 收尾、基类 `osv.osv`→`osv.Model` 改名起始、视图 Bootstrap 化。基于 OCA 7.0 官方指南 + 多社区源交叉核实，与 `Odoo6to7Migration/` 技能事实对齐。 |
 | `Odoo_Migration_Cookbook_5_to_6.md` | 5.0 → 6.0 | 单卷原创烹饪书（14 章）：导言与版本作用域、`__terp__.py`→`__openerp__.py` 清单文件改名（头号断裂）、`init_xml` / `update_xml` / `demo_xml`→`data` / `demo` / `test` 清单键收尾、manifest 键规范化。基于 OCA 6.0 官方指南 + 多社区源交叉核实，与 `Odoo5to6Migration/` 技能事实对齐。 |
-| `Odoo_Migration_Cookbook_19_to_20_fixed.pdf` | 19.0 → 20.0 | 第一卷修复版。原版由 HeadlessChrome 打印，表格与代码块置于横向滚动容器内，打印时右边界在 `x ≈ 547.7pt` 处被硬裁切，导致 10 个页面的表格右列内容、4 处代码块行尾被截断。修复版用 PyMuPDF 反向提取文档模型并对裁切单元格/代码行补全，再以 WeasyPrint 重新排版（页宽固定布局 + 单元格内自动换行），全篇 **0 个越界文本 span**（原版 45 处）。 |
-| `Odoo_Migration_Cookbook_19_to_20_Vol2_Closing_the_Gaps.pdf` | 19.0 → 20.0 | 第二卷《Closing the Gaps》，补齐第一卷未覆盖的运行时/导入、缓存与 SQL、模型 API、字段与测试等差异。 |
+| `pdf/Odoo_Migration_Cookbook_19_to_20_fixed.pdf` | 19.0 → 20.0 | 第一卷修复版。原版由 HeadlessChrome 打印，表格与代码块置于横向滚动容器内，打印时右边界在 `x ≈ 547.7pt` 处被硬裁切，导致 10 个页面的表格右列内容、4 处代码块行尾被截断。修复版用 PyMuPDF 反向提取文档模型并对裁切单元格/代码行补全，再以 WeasyPrint 重新排版（页宽固定布局 + 单元格内自动换行），全篇 **0 个越界文本 span**（原版 45 处）。 |
+| `pdf/Odoo_Migration_Cookbook_19_to_20_Vol2_Closing_the_Gaps.pdf` | 19.0 → 20.0 | 第二卷《Closing the Gaps》，补齐第一卷未覆盖的运行时/导入、缓存与 SQL、模型 API、字段与测试等差异。 |
 
 详细的裁切原因、补全清单（33 处表格 + 3 处代码行，标注【源码】/【md】/【重构】依据）以及出版商信息抹除记录，见 [`FIX_NOTES.md`](./FIX_NOTES.md)。
 

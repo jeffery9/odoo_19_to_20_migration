@@ -121,8 +121,8 @@ parses as YAML; consistency script ⇒ Cookbook ↔ `references/` no drift.
   `OdooXXtoYYMigration/` skill with 6 references + scanner): `Odoo_Migration_Cookbook_*_to_*.md`
   plus `Odoo5to6Migration/` … `Odoo19to20Migration/`. Pairs ≤17 are **pure-hand** (no
   `upgrade_code`); 18→20 ship codemods (see `references/odoo-version-pairs.md`).
-- `Odoo_Migration_Cookbook_19_to_20_fixed.pdf` — pipeline A (45 clipped spans restored).
-- `Odoo_Migration_Cookbook_19_to_20_Vol2_Closing_the_Gaps.pdf` — pipelines B+C (8 chapters).
+- `pdf/Odoo_Migration_Cookbook_19_to_20_fixed.pdf` — pipeline A (45 clipped spans restored).
+- `pdf/Odoo_Migration_Cookbook_19_to_20_Vol2_Closing_the_Gaps.pdf` — pipelines B+C (8 chapters).
 - `Odoo19to20Migration/` — pipeline D (skill with 6 references + scanner).
 - `Core_Models_Changelog.md` + `scripts/diff_core_models.py` — pipeline G: the cross-version
   core-model index (5→20) and its model/field diff tool.
