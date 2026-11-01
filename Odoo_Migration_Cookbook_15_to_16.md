@@ -280,6 +280,7 @@ DeployMonkey 指出 16.0 `website` 模块重构，`@http.route(website=True, ...
 | `account.tax.report` | `account.report` | 16.0 | OCU |
 | `account.tax.report.line` | `account.report.line` | 16.0 | OCU |
 | `account.account.user_type_id` | `account_type` | 16.0 | OCU |
+| `account.analytic.account.group_id` | `plan_id` | 16.0 | 源码核实（15.0 `group_id` / 16.0 `plan_id`） |
 | `track_visibility='always'` | `tracking=True` | 16.0 | DeployMonkey + OCA |
 | `@api.multi` 装饰器 | 删除装饰器（方法默认多记录） | 16.0 | 源码核实（api.py 无 api.multi） |
 | `ir_translation` 表 | 移除 → JSONB 翻译列 | 16.0 | OCU |
@@ -307,6 +308,9 @@ DeployMonkey 指出 16.0 `website` 模块重构，`@http.route(website=True, ...
 | 看板分组缺列 | 加 `group_expand` | 第 5.3 章 |
 | 继承 `stock.production.lot` 报错 | → `stock.lot` | 第 3.2 章 |
 | 发票科目类型不对 | `user_type_id`→`account_type` | 第 3.2 章 |
+| 分析账户取不到所属计划 | `group_id`→`plan_id` | 第 8.1 章 |
+
+> **分析计划字段改名的版本归属**：`account.analytic.account.group_id`→`plan_id` 属 **15→16**（源码：15.0 为 `group_id`、16.0 为 `plan_id`），常被误贴到 19→20。同时注意模块层 `account_analytic.group`→`account_analytic.plan` 是**模块改名**，与字段改名是两件事，两处都要改。分析明细行 `account.analytic.line` 上若也有 `group_id` 引用，需一并核到 `plan_id`（该字段在 16.0 已随计划体系重构）。
 
 ---
 

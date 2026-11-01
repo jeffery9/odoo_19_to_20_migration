@@ -326,7 +326,7 @@ class ReportJournal(models.AbstractModel):
 
 ## 12. 模块 / 模型 / 字段映射
 
-除第 8 节模块改名/合并外，10→11 模型层无大规模重命名（`account.invoice`→`account.move` 属于 12→13，不属本卷）。需要关注的：
+除第 8 节模块改名/合并外，10→11 模型层无大规模重命名（`account.invoice`→`account.move` 属于 12→13，不属本卷），但有一处高频字段改名——`stock.quant.qty`→`quantity`（见 12.1）。需要关注的：
 
 | 项目 | 10.0 | 11.0 | 备注 |
 |---|---|---|---|
@@ -334,6 +334,27 @@ class ReportJournal(models.AbstractModel):
 | `workflow` 模型/XML | 存在 | 移除 | 第 5 节 |
 | `base.group_configuration` | 存在 | `base.group_system` | 第 11 节 |
 | 报表 `render_html` | 存在 | `get_report_values` | 第 6 节 |
+| `stock.quant` 字段 `qty` | `qty` | `quantity` | 见下 |
+
+### 12.1 核心领域模型变更：`stock.quant.qty` → `quantity` — CONFIRMED
+
+库存定量字段改名，常被误贴到 12→13，源码核实是 **10.0 仍是 `qty`、11.0 起为 `quantity`**。
+
+| 10.0 | 11.0 | 说明 |
+|---|---|---|
+| `stock.quant.qty` | `quantity` | 在手数量 |
+| `stock.quant.reserved_quantity` | 不变 | 预留数量未改 |
+
+**影响面**：所有直接读 `quant.qty` 的代码、报表、SQL。这是高频字段，库存类模块几乎必中。
+
+**迁移动作**：
+
+1. 代码：`quant.qty` → `quant.quantity`；
+2. SQL/报表：`stock_quant.qty` 列名同步改（OpenUpgrade 处理表结构）；
+3. 视图：`<field name="qty"/>` → `quantity`；
+4. 注意 `stock.move`/`stock.move.line` 的同名字段是 `product_uom_qty`/`quantity` 另有体系，别混改。
+
+> 顺带记住后续：`stock.move.product_uom` 到 **20.0** 才改 `uom_id`，与本条的 11.0 无关。
 
 ---
 

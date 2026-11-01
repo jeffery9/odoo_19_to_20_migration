@@ -291,7 +291,7 @@ OCA 10.0 将若干原本挂在 `base` 模块下的安全组 / 菜单 / 记录迁
 
 ## 11. 模块 / 模型 / 字段映射
 
-9→10 **没有**大规模模型 / 模块重命名（`account.invoice`→`account.move` 属 12→13，不属本卷）。需要关注的字段层改名：
+9→10 **没有**大规模模型 / 模块重命名（`account.invoice`→`account.move` 属 12→13，不属本卷），但有一处**核心模型移除**——`stock.pack.operation`（见 11.1），库存类自定义模块必查。以下是需要关注的字段层改名：
 
 | 项目 | 9.0 | 10.0 | 备注 |
 |---|---|---|---|
@@ -301,6 +301,28 @@ OCA 10.0 将若干原本挂在 `base` 模块下的安全组 / 菜单 / 记录迁
 | `copy` 方法 `@api.one` | 有效 | `@api.multi` | 第 7 节 |
 | `base.group_configuration` | 存在 | `base.group_system` | 第 6 节 |
 | 安全组 `base.group_sale_*` / `base.group_hr_*` 等 | 存在 | `sales_team.*` / `hr.*` | 第 8 节 |
+| 模型 `stock.pack.operation` | 存在 | **移除**（→ `stock.move.line`） | 见下 |
+
+### 11.1 核心领域模型变更：`stock.pack.operation` 移除 — CONFIRMED
+
+这是 9→10 唯一的核心业务模型断裂，也是常被贴错版本的一条（常被说成 13→14 或 12→13，实际源码是 8.0/9.0 存在、**10.0 起消失**）。
+
+| 9.0 | 10.0 | 说明 |
+|---|---|---|
+| `stock.pack.operation` | 移除 | 打包/明细操作模型 |
+| `stock.picking.pack_operation_ids` | 移除 | 指向上述模型的 o2m |
+| — | `stock.move.line` | 承接明细行职责（12.0+ 成为标准行模型） |
+
+**影响面**：自定义拣货单、打包流程、按 `pack_operation_ids` 循环的代码全部失效。9→10 时代 `stock.move.line` 刚出现，字段还不完整，很多迁移需要把"打包操作"直接映射为"移动行"。
+
+**迁移动作**：
+
+1. `env['stock.pack.operation']` → `env['stock.move.line']`；
+2. 视图里 `pack_operation_ids` 的 tree/form 继承改 `move_line_ids`；
+3. 字段对应：`product_id`/`qty`/`location_id`/`result_package_id` 在两边含义相近，但 `picking_id` 在 10.0 需经 `move_id.picking_id` 取；
+4. 数据迁移交给 OpenUpgrade（有对应脚本），自定义字段需自己写 `migrations/10.0/` 脚本搬运。
+
+> 后续演进：`stock.move.line` 在 12.0 才稳定成标准行模型，若从 9 直接跳到 12+，中间态的字段差异可跳过，直接按目标版本的行模型写。
 
 ---
 

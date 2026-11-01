@@ -280,8 +280,20 @@ picking.move_ids_without_package   # 14.0（[verify]）
 | `selection_add=[("foo","Foo")]` | `+ ondelete={"foo":"set null"}` | 字段属性 | CONFIRMED |
 | `<field string="x">` 在 list 显示文本 | 改用 `title` | 视图属性 | CONFIRMED |
 | TransientModel 隐式 ACL | 显式 ACL | 安全 | CONFIRMED |
-| `stock.picking.move_lines` | `move_ids_without_package` | 字段改名 | [verify] |
-| `stock.picking.move_line_ids` | `move_line_ids_without_package` | 字段改名 | [verify] |
+| 模型 `stock.picking.responsible` | **移除** | 模型移除 | CONFIRMED |
+
+> **红线纠错**：早期版本的本章表格曾把 `stock.picking.move_lines`→`move_ids_without_package`、
+> `move_line_ids`→`move_line_ids_without_package` 列为 13→14 字段改名，**这一说法已被源码证伪**。
+> 实测两者自 12.0 起**长期共存**（`move_lines` 是全部移动行，`move_ids_without_package` 是不含包裹的行），
+> 直到 **19.0 才一并移除**。也就是说 13→14 阶段**不需要**改这两个字段名，照用即可。
+
+### 9.1 核心领域模型变更：`stock.picking.responsible` 移除 — CONFIRMED
+
+13→14 唯一的核心模型移除。`stock.picking.responsible` 是"调拨负责人"选择向导（13.0 引入，14.0 即删），与此同期新增的是补货报表模型、`stock.orderpoint.snooze` 等。
+
+**影响面**：很小——该向导存活期短，第三方模块基本来不及依赖。若确有引用，14.0 中改为直接写 `picking.responsible_id`（该字段仍在 `stock.picking` 上）。
+
+**迁移动作**：删除对 `env['stock.picking.responsible']` 的任何引用；把向导调用点改为在 picking 上直接赋值 `responsible_id`。
 
 **本版本对不涉及**的重大重命名（红线）：`payment.acquirer`→`payment.provider`（15→16）、
 `coupon`→`loyalty`（15→16）、`stock.production.lot`→`stock.lot`（15→16）、
