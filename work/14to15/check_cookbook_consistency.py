@@ -12,13 +12,22 @@ COOKBOOK = ROOT / "Odoo_Migration_Cookbook_14_to_15.md"
 REFS_DIR = ROOT / "Odoo14to15Migration" / "references"
 
 TOKENS = [
-    "t-raw", "t-out", "t-esc",
-    "ir.model.fields", "_xmlid_lookup",
-    "inline_template", "mail.template", "#77074",
-    ".esm.js", "@odoo-module", "#69120",
-    "SavepointCase", "TransactionCase", "#62031",
-    "Environment.manage",
+    # QWeb directives + the escaping trap
+    "t-raw", "t-out", "t-esc", "Markup",
+    # data-access API (the real 14→15 break, not an access-control change)
+    "ir.model.fields", "_xmlid_lookup", "_xmlid_to_res_id",
+    # mail rendering engines
+    "inline_template", "mail.template", "render_engine", "#77074",
+    # frontend / assets
+    ".esm.js", "@odoo-module", "qweb",
+    # tests (deprecated, NOT removed)
+    "SavepointCase", "TransactionCase", "Environment.manage",
+    # red-line check: belongs to 13→14, must stay documented as such
     "subtype_xmlid", "message_post",
+    # core business models
+    "payment_method_line_ids", "amount_by_group", "tax_exigible",
+    "stock.inventory", "phone.validation.mixin", "detailed_type",
+    # tooling
     "upgrade_code",
 ]
 
