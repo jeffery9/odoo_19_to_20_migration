@@ -273,6 +273,54 @@ subtype 对象/字符串）。OCA 15.0 核心指南未逐条列，但社区迁�
 `attrs`/`states` 硬拒（16→17）、`tree`→`list`（17→18）、`name_get` 移除（17→18）、
 `track_visibility`→`tracking`（12→13）。
 
+### 9.1 核心领域模型变更（本版本对必查）— CONFIRMED
+
+上表是框架级改名。14→15 另有 3 条核心业务模型变更，均由 14.0 / 15.0 源码模型集 diff 核实，与 `Core_Models_Changelog.md` 同源。它们不属于"框架改名"，容易被框架清单漏掉，但影响面集中在中大型客户的库存与项目流程。
+
+#### 9.1.1 盘点模型换代（库存头号断裂）
+
+`stock.inventory` 与 `stock.inventory.line` 在 15.0 **整体移除**。盘点不再是一张独立单据，改为在 `stock.quant` 上直接录入 `inventory_quantity`，并新增 `stock.inventory.adjustment.name` 给这批调整命名。
+
+| 14.0 | 15.0 | 说明 |
+|---|---|---|
+| `stock.inventory`（盘点单） | 移除 | 盘点改 `stock.quant` 的盘点模式 |
+| `stock.inventory.line` | 移除 | 明细即 quant 行的 `inventory_quantity` |
+| — | `stock.quant.inventory_quantity` | 已有字段，15.0 起成为盘点主入口 |
+| — | `stock.inventory.adjustment.name` | 新增，给一次盘点批次命名 |
+
+**影响面**：所有依赖"盘点单"的业务都断——自定义盘点报表、按 `inventory_id` 聚合的统计、盘点审批流、以及任何 `env['stock.inventory']` 的代码。
+
+**迁移动作**：
+
+1. 代码层：`env['stock.inventory']` 全部改为 `env['stock.quant']` + `action_apply_inventory()`；
+2. 数据层：历史盘点单数据在 15.0 无载体，升级前导出归档（OpenUpgrade 会把在途盘点转录为 quant 调整，但不保留单据号语义）；
+3. 自定义盘点报表改用 `stock.quant` 的 `inventory_quantity_set` + `stock.inventory.adjustment.name` 组合；
+4. 盘点审批流（若有）需在新模型上重建，因为没有"单据状态"可挂。
+
+> 这条常被误判成"只是换了个表"。实际是**作业范式变化**：从"开单—录数—审核—过账"变成"直接改 quant—批量应用"。相关培训与 SOP 也要改。
+
+#### 9.1.2 产品类型细分字段新增
+
+15.0 新增 `product.template.detailed_type`（`consu`/`product`/`service`），与既有的 `type` 并存，用来区分"可库存产品"与"消耗品"。
+
+**注意**：这是**新增**，不是改名——`type` 在 15.0 仍然存在且是主字段。该字段随后在 **18.0 被移除**，所以从 14 一路升到 20 的话，会先加后删，不要在中间版本把逻辑永久绑到 `detailed_type` 上。
+
+**迁移动作**：15.0 起若需要"可库存"判断，用 `detailed_type == 'product'`；但若目标版本 ≥18.0，直接写 `is_storable`，省一次返工。
+
+#### 9.1.3 项目里程碑与项目更新模型新增
+
+`project.milestone`、`project.update` 在 15.0 新增。项目域从"只有任务"扩展到"任务 + 里程碑 + 状态汇报"。
+
+**迁移动作**：自定义项目看板若自建了里程碑表，评估迁移到 `project.milestone`；`project.update` 提供周期性状态汇报，可替代自建的周报模型。
+
+### 9.2 本章与其他文档的关系
+
+| 需求 | 去处 |
+|---|---|
+| 某业务模块的逐字段改名 | OpenUpgrade `upgrade_analysis.txt` |
+| 跨版本模型演变全局索引 | `Core_Models_Changelog.md` |
+| 本对框架级改名 | 本章主表 |
+
 ---
 
 ## 10. 测试与校验

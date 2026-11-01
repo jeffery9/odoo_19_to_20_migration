@@ -297,9 +297,11 @@ bus/im 的实时推送改用 WebSocket（基础设施层），自定义代码一
 
 ---
 
-## 第 6 章 · 模块 / 模型 / 字段映射（17→18 较轻）
+## 第 6 章 · 模块 / 模型 / 字段映射（框架轻，EE 模型有硬断裂）
 
-> OCA 18.0 指南明确：**本步聚焦框架变更，不罗列数据模型变更**（后者因模块而异，且极其庞大）。数据模型改名请查 OpenUpgrade 项目的 `upgrade_analysis.txt`。以下仅列框架级、跨模块通用的重命名。
+> OCA 18.0 指南明确：**本步聚焦框架变更，不罗列数据模型变更**（后者因模块而异，且极其庞大）。数据模型改名请查 OpenUpgrade 项目的 `upgrade_analysis.txt`。
+>
+> 但要纠正一个常见误读：**"不罗列"不等于"没有"**。17→18 对 Enterprise 用户有一处硬断裂——预算模型族整体重写（`crossovered.budget` 全族 → `budget.analytic` 族，kept=0），详见 6.3.1。CE 用户可跳过 6.3.1，但 6.3.2–6.3.5 与 CE 相关。
 
 ### 6.1 通用字段/属性改名（框架级）— CONFIRMED
 
@@ -325,9 +327,77 @@ bus/im 的实时推送改用 WebSocket（基础设施层），自定义代码一
 
 与 18→19（web_editor 拆分）不同，**17→18 没有核心模块改名**。`web_editor` 在 18 仍可用（19 才拆）。第三方应用是主要阻塞点：每个付费/OCA 应用都需有 18.0 分支，否则无法完成升级（ODIWARE 指南）。
 
-### 6.3 数据模型改名 — 见 OpenUpgrade
+### 6.3 核心领域模型变更（本版本对必查）— CONFIRMED
 
-`account.*` / `stock.*` / `hr.*` 等业务模型字段改名属 18→19 或模块特定迁移，不在本书范围。建议直接查阅 OCA OpenUpgrade 的 `upgrade_analysis.txt`（按核心模块拆分）。
+OCA 18.0 指南说"不罗列数据模型变更"，是指不为每个业务模块穷举字段。但**核心领域模型的断裂必须单独查**——17→18 有一处对 EE 用户是硬断裂（预算整族重写），OCA 那种通用清单不会覆盖。本节条目均以 17.0 / 18.0 源码模型集 diff 核实，与 `Core_Models_Changelog.md` 同源。
+
+#### 6.3.1 Enterprise 预算模型族整体重写（EE 头号断裂）
+
+EE 的 `account_budget` 模块在 18.0 被**整体重建**，不是改名：模型集 diff 显示 `kept = 0`，旧模型全删、新模型全建。
+
+| 17.0（EE） | 18.0（EE） | 状态 |
+|---|---|---|
+| `crossovered.budget` | — | 移除 |
+| `crossovered.budget.lines` | — | 移除 |
+| `account.budget.post` | — | 移除 |
+| — | `budget.analytic` | 新增（含 `parent_id` 修订链） |
+| — | `budget.line` | 新增 |
+| — | `budget.report` | 新增 |
+| — | `budget.split.wizard` | 新增 |
+
+**影响面**：所有 EE 用户的预算数据都要重建。旧 `crossovered.budget` 是"按科目跨期对比实际/理论金额"，新 `budget.analytic` 改为挂在**分析计划**上（`analytic_plan_fields_mixin`），语义从"科目预算"变成"分析账户预算"。这不是字段映射能解决的，需要重新设计预算结构。
+
+**迁移动作**：
+
+1. 先导出 `crossovered.budget` 与 `crossovered.budget.lines` 全量数据（SQL 直读，升级前必做）；
+2. 18.0 中按 `budget.analytic` + `budget.line` 重建，`budget.analytic` 支持 `parent_id` 做修订版本链，可把历史预算转为基线；
+3. 自定义模块若引用 `crossovered.budget`，改指向 `budget.analytic`，注意字段语义不等价（旧模型有 `theoritical_amount`/`practical_amount`，新模型走 `budget.line` 的期间拆分）；
+4. 预算报表（`budget.report`）是新增的，旧的预算对比视图需重写。
+
+> **不要被 `.po` 误导**：18.0 的 `account_budget/i18n/*.po` 里仍能看到 `crossovered_budget` 字样，那是翻译文件没重新生成，模型本身已不存在。判断模型是否存在的唯一依据是 `*.py` 源码。
+
+#### 6.3.2 组合产品进入 product 核心
+
+`product.combo` / `product.combo.item` 在 18.0 新增。17.0 的组合逻辑在 POS（`pos.combo`），18.0 上移到 `product` 核心，销售/电商也能用。
+
+**迁移动作**：自定义模块若自建"套餐/组合"模型，评估是否改用 `product.combo`；POS 侧的 `pos.combo` 数据需迁移到新模型（OpenUpgrade 有部分脚本）。
+
+#### 6.3.3 产品类型回归单一 `type`
+
+17.0 的 `product.template.detailed_type`（consu/product/service）在 18.0 移除，产品类型回到单一 `type`；"是否可库存"改由 `is_storable` 判断。
+
+**迁移动作**：
+
+- `detailed_type` 的读取点全部改 `type`；
+- 判断"可库存"的地方从 `detailed_type == 'product'` 改成 `is_storable`（注意 `is_storable` 18.0 定义在 `stock` 模块，不是 `product`）；
+- 自定义视图里 group by `detailed_type` 的需删除。
+
+> 这条是 14→15 新增字段的"回撤"。从 14→15 看是新增，从 17→18 看是移除——两个版本对都要处理，别只改一处。
+
+#### 6.3.4 三个向导模型移除
+
+| 17.0 模型 | 18.0 | 替代 |
+|---|---|---|
+| `stock.assign.serial` | 移除 | 序列号改在 `stock.move.line` 上直接录入 |
+| `account.unreconcile` | 移除 | 核销撤销走 `account.move` 的撤销/重置方法，无同名模型 |
+| `mrp.document` | 移除 | 制造文档改挂 `ir.attachment`（CE 与 EE 均无搬迁） |
+
+**影响面**：自定义按钮、服务端 action 若调这些向导的 `action_*`，升级后点击无反应或 `AttributeError`。
+
+#### 6.3.5 伙伴对账状态字段移除
+
+`res.partner.has_unreconciled_entries`、`res.partner.last_time_entries_checked` 在 18.0 移除。对账状态改由 `account.move` 侧实时判断。
+
+**迁移动作**：自定义报表若用这两个字段做"未对账伙伴"筛选，改为对 `account.move.line` 做 `('reconciled','=',False)` 聚合。注意旧字段是缓存值（有延迟），新做法是实时计算，性能敏感处需加索引或物化。
+
+#### 6.3.6 本章与其他文档的关系
+
+| 需求 | 去处 |
+|---|---|
+| 某业务模块的逐字段改名 | OpenUpgrade `upgrade_analysis.txt` |
+| 跨版本模型演变全局索引 | `Core_Models_Changelog.md` |
+| 本对框架级 API 改名 | 本章 6.1 |
+| EE 模块专属变更 | 需对照 EE 仓库，CE 源码查不到 |
 
 ### 6.4 症状 → 修复索引
 
@@ -345,6 +415,11 @@ bus/im 的实时推送改用 WebSocket（基础设施层），自定义代码一
 | 路由 import 时记弃用 | `type='json'`→`jsonrpc` | 第 5.1 章 |
 | 窗口动作仍显示 tree 视图 | `view_mode` 未改 | 第 1.1 章 |
 | 继承视图 XPath 失效 | `//tree` 未改 `//list` | 第 1.1 章 |
+| EE 升级后预算菜单消失 / `crossovered.budget` 报错 | 预算模型族已重写为 `budget.analytic` | 第 6.3.1 章 |
+| 产品 `detailed_type` 报 `AttributeError` | 该字段 18.0 移除 | 第 6.3.3 章 |
+| 无法批量分配序列号 | `stock.assign.serial` 向导移除 | 第 6.3.4 章 |
+| 核销撤销按钮点击无反应 | `account.unreconcile` 向导移除 | 第 6.3.4 章 |
+| "未对账伙伴"筛选失效 | `has_unreconciled_entries` 字段移除 | 第 6.3.5 章 |
 
 ---
 

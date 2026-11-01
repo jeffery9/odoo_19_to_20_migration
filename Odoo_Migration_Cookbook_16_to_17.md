@@ -335,9 +335,11 @@ self.message_post(body=f"Invoice {inv.name} confirmed")
 
 ---
 
-## 第 6 章 · 模块 / 模型 / 字段映射（16→17 较轻）
+## 第 6 章 · 模块 / 模型 / 字段映射（框架轻，但有模型硬断裂）
 
-> OCA 17 指南明确：**本步聚焦框架变更，不罗列数据模型变更**（后者因模块而异且极其庞大）。数据模型改名请查 OCA OpenUpgrade 的 `upgrade_analysis.txt`。以下仅列框架级、跨模块通用的重命名/行为变更。
+> OCA 17 指南明确：**本步聚焦框架变更，不罗列数据模型变更**（后者因模块而异且极其庞大）。数据模型改名请查 OCA OpenUpgrade 的 `upgrade_analysis.txt`。
+>
+> 但要纠正一个常见误读：**"不罗列"不等于"没有"**。16→17 有一处真正的硬断裂——科目表模板模型族整体移除（6.3.1），任何自建会计本地化包都会在这里翻车。本章 6.1 列框架级通用改名，6.3 列必须单独核的核心领域模型变更。
 
 ### 6.1 通用字段/属性/API 改名（框架级）— CONFIRMED
 
@@ -362,9 +364,66 @@ self.message_post(body=f"Invoice {inv.name} confirmed")
 
 与 17→18（无核心改名）、18→19（`web_editor` 拆分）不同，**16→17 没有核心模块改名**。常见"改名"多属更早版本（如 `delivery`→`stock_delivery` 是早期）或业务模块特定，不在此框架清单内。第三方应用是主要阻塞点：每个付费/OCA 应用需有 17.0 分支（odoohub 指南）。
 
-### 6.3 数据模型改名 — 见 OpenUpgrade
+### 6.3 核心领域模型变更（本版本对必查）— CONFIRMED
 
-`account.*` / `stock.*` / `hr.*` 等业务模型字段改名属模块特定迁移，不在本书范围。建议直接查阅 OCA OpenUpgrade 的 `upgrade_analysis.txt`（按核心模块拆分）。
+OCA 17 指南说"不罗列数据模型变更"，指的是不为每个业务模块穷举字段。但**核心领域模型的断裂必须单独查**：本节 6 条均以 16.0 / 17.0 源码模型集 diff 核实，与 `Core_Models_Changelog.md` 同源。逐模块的字段级改名仍请查 OpenUpgrade 的 `upgrade_analysis.txt`。
+
+#### 6.3.1 科目表模板模型族整体移除（头号断裂）
+
+16.0 的科目表靠一组 `*.template` 模型描述，17.0 把它们全部删掉，科目表改由模块内的 Python/CSV 数据文件直接定义。
+
+| 16.0 模型 | 17.0 | 处置 |
+|---|---|---|
+| `account.tax.template` | 移除 | 税率改 `account.tax` 数据记录 |
+| `account.fiscal.position.template` | 移除 | 税位改 `account.fiscal.position` 数据记录 |
+| `account.group.template` | 移除 | 科目组改 `account.group` 数据记录 |
+| `account.account.template` | 移除 | 科目改 `account.account` 数据记录 |
+| `account.chart.template` | 保留但语义变更 | 由 `_get_chart_template_data()` 驱动 |
+
+**影响面**：任何自定义会计本地化包（`l10n_*` 或自建 chart template）都会在 17.0 加载失败。典型症状是升级时 `KeyError: 'account.tax.template'` 或科目表为空。
+
+**迁移动作**：
+
+1. 把 `models/` 下的 `_name = 'account.tax.template'` 等模型文件删掉；
+2. 把原模板记录转成 `data/*.xml` 或 `data/*.csv`，`model` 指向正式模型（`account.tax` 而非 `.template`）；
+3. 自定义科目表入口改为重写 `account.chart.template` 的 `_get_chart_template_data()`，返回字典而非建模板记录；
+4. 若只依赖标准科目表，通常无需改动，但要确认 `depends` 里没有继承模板模型的第三方模块。
+
+#### 6.3.2 员工计划模型族移除
+
+`hr.plan` / `hr.plan.activity.type` / `hr.plan.wizard` 在 17.0 全部移除，入职/活动计划改由通用的 `mail.activity.plan` 承载（CE 内无同名搬迁）。
+
+**迁移动作**：自定义模块若引用 `hr.plan`，改指向 `mail.activity.plan` / `mail.activity.plan.template`；原 `hr.plan.wizard` 的调用点改用 `mail.activity.plan` 的 schedule 动作。历史数据需先导出再按新模型重建，OpenUpgrade 无对应脚本。
+
+#### 6.3.3 "立即转运"与"立即生产"向导移除
+
+| 16.0 | 17.0 | 说明 |
+|---|---|---|
+| `stock.immediate.transfer` 向导 | 移除 | 同时删 `stock.picking.immediate_transfer`、`show_validate`、`show_mark_as_todo` 三个字段 |
+| `mrp.immediate.production` 向导 | 移除 | 生产单直接走 `mrp.production` 的 action |
+
+**影响面**：自动化动作、服务端 action、自定义按钮若调 `stock.immediate.transfer` 的 `process()`，17.0 会 `AttributeError`。这也是 Odoo 17 起"确认即过账"流程简化的副作用——不再需要二次确认弹窗。
+
+**迁移动作**：直接调用 `stock.picking.button_validate()`；前端按钮删掉 `name="%(action_stock_immediate_transfer)d"` 这类 action 引用。
+
+#### 6.3.4 发票发送向导改名
+
+`account.invoice.send` → `account.move.send`（17.0）。注意 18.0 还会进一步拆出 `account.move.send.wizard`，所以这里**不要**直接把向导名硬编码进长期代码，优先走 `action_invoice_sent`。
+
+#### 6.3.5 伙伴显示名字段改名
+
+`res.partner.display_name`（存储字段）→ `complete_name`，计算函数为 `_compute_complete_name`；同时 `translated_display_name` 移除。
+
+**迁移动作**：`search([('display_name','ilike',x)])` 在 17.0 仍可用（`display_name` 作为非存储计算字段存在），但排序与 group by 会失效——需排序时改 `complete_name`。视图里 `t-esc="partner.display_name"` 无需改。
+
+#### 6.3.6 本章与其他文档的关系
+
+| 需求 | 去处 |
+|---|---|
+| 某业务模块的逐字段改名 | OpenUpgrade `upgrade_analysis.txt` |
+| 跨版本模型演变全局索引 | `Core_Models_Changelog.md` |
+| 本对框架级 API 改名 | 本章 6.1 |
+| 源码复核手法 | `MigrationKnowledgeForge/references/cross-version-models.md` |
 
 ### 6.4 症状 → 修复索引
 
@@ -379,6 +438,11 @@ self.message_post(body=f"Invoice {inv.name} confirmed")
 | 智能按钮 context 警告 | `active_id`/`active_model` 未改 | 第 3.4 章 |
 | 服务起不来（Python 版本） | 仍是 Python 3.8/3.9 | 第 1.1 章 |
 | 自定义组件仍 `define([...])` | 旧 Owl 1 写法（若从更老版本跳） | 第 2.5 章 `[verify]` |
+| 升级报 `KeyError: 'account.tax.template'` / 科目表为空 | 科目表模板模型族已移除 | 第 6.3.1 章 |
+| 自定义本地化包加载失败 | `l10n_*` 仍继承 `*.template` 模型 | 第 6.3.1 章 |
+| `AttributeError: 'stock.immediate.transfer'` | 仍在调"立即转运"向导 | 第 6.3.3 章 |
+| 入职/活动计划菜单消失、`hr.plan` 报错 | `hr.plan` 族移除，改用 `mail.activity.plan` | 第 6.3.2 章 |
+| `partner` 按 `display_name` 排序无效 | 该字段 17.0 变为非存储 | 第 6.3.5 章 |
 
 ---
 
