@@ -51,6 +51,15 @@ A change enters the X→Y artifact **only if it first appears at ≥ X.0 and ≤
 | `stock.inventory` / `stock.inventory.line` models **removed** (counts move to `stock.quant` + `stock.inventory.adjustment.name`) | **14 → 15** | source: present 14.0, absent 15.0 |
 | `product.template.detailed_type` **added** (removed again at 18.0 — see 17→18 row) | **14 → 15** | source: absent 14.0, present 15.0 |
 | `project.milestone` / `project.update`; `hr.work.location`; `stock.storage.category` models added | **14 → 15** | source: model-set diff |
+| `account.journal` payment methods: `inbound/outbound_payment_method_ids` (m2m) → `*_payment_method_line_ids` (o2m); `account.payment.method.line` **added** | **14 → 15** | source: 14.0 `account_journal.py` m2m; 15.0 `account_payment_method.py` line model |
+| `account.move.amount_by_group` / `sale.order.amount_by_group` **removed** → `tax_totals_json` | **14 → 15** | source: field diff 14.0 vs 15.0 |
+| `account.move.line.tax_exigible` **removed** → `account.move.always_tax_exigible`; `tax_fiscal_country_id` → move-level `tax_country_id` | **14 → 15** | source: field diff |
+| `product.template.lst_price` **removed** (field survives only on `product.product`) | **14 → 15** | source: 14.0 `product_template.py` has it, 15.0 file has zero occurrences |
+| `ir.model.data` lookup API: `xmlid_lookup`→`_xmlid_lookup`, `xmlid_to_res_id`→`_xmlid_to_res_id`; `_get_id(module, xml_id)`, `get_object_reference`, `get_object`, `xmlid_to_object` **removed** | **14 → 15** | source: `ir_model.py` method set 14.0 vs 15.0 |
+| QWeb `t-raw` / `t-esc` **deprecated** (removal is 15→16); `t-out` escapes unless the value is a `Markup` | **14 → 15** | source: 15.0 `qweb.py` keeps the deprecated branches, 16.0 has none |
+| `mail.moderation` model **removed** (+ `mail.message` moderation fields); `phone.validation.mixin`, `project.task.create.sale.order`, `calendar.contacts` removed | **14 → 15** | source: model-set diff (21 removed) |
+| `ir.asset`, `res.users.settings`, `crm.team.member`, `stock.package.type`, `hr.leave.accrual.plan` **added** | **14 → 15** | source: model-set diff (111 added) |
+| `note`/`narration`/`description`/`comment` fields `Text` → `Html` (cross-cutting) | **14 → 15** | source: field-type diff |
 | `stock.production.lot` → `stock.lot`; `payment.acquirer` → `payment.provider`; `coupon` → `loyalty` | **15 → 16** | `Odoo_Migration_Cookbook_15_to_16.md` |
 | `account.*.template` model family **removed** (chart templates become Python/CSV data) | **16 → 17** | source: present 16.0, absent 17.0 |
 | `account.invoice.send` → `account.move.send` | **16 → 17** | source: 16.0 invoice_send.py, 17.0 move_send.py |
@@ -107,7 +116,6 @@ These must **not** be dragged into the named pair; they belong where stated:
 - `account.tax.type` → `type_tax_use` → **unsupported by source** (`type_tax_use` exists since v9); keep out of tables or mark `[verify]`.
 - `res.users.groups_id` → `group_ids` → **18→19** (18.0 still `groups_id`, 19.0 `group_ids`; NOT 19→20).
 - `account.analytic.account.group_id` → `plan_id` → **15→16** (16.0 `plan_id`; NOT 19→20, NOT 17→18).
-- `project.task.user_id` → `user_ids` → **not a 19→20 change** (`user_ids` "Assignees" already exists at 16.0); do not list it.
 - `ir.attachment.datas` → `raw` → **not a rename**: `raw` exists from 17.0 onward; `datas` is simply **removed at 20.0** (list as FIELD-REMOVE).
 - `stock.move.product_uom` → `uom_id` → **19→20** (correct pair; the old name is `product_uom`, not `product_uom_id`).
 - `crossovered.budget` → `budget.analytic` → **17→18** (NOT 19→20). The whole EE `account_budget` family was rebuilt at 18.0 (`kept=0`); 19.0 and 20.0 already use `budget.analytic` only.
@@ -116,6 +124,15 @@ These must **not** be dragged into the named pair; they belong where stated:
 - `procurement.group` → `stock.reference` → **NOT a rename.** `procurement.group` is a procurement grouping (groups moves of one SO into pickings) and is **removed** at 18→19; `stock.reference` is a **newly added** document-reference chain (`_description = 'Reference between stock documents'`, `move_ids` m2m + computed `picking_ids`). Different purpose, same pair — do not map one onto the other.
 - `note.note` → `project.task` → **never existed**: `note.note` is absent from 17.0/18.0/19.0/20.0. Do not list it anywhere.
 - `project.task.user_id` → `user_ids` → **not a change at all** (`user_ids` exists since 16.0).
+- `ir.model*` access "removed at 15.0" → **not supported by source**: `ir.model` / `ir.model.fields` search and `_fields` work fine in 15.0. The real 14→15 break is the `ir.model.data` **lookup API** (`_get_id` / `get_object_reference` removed, `xmlid_*` private-ised).
+- `_get_id()` as the fix for `ir.model.data` → **the worst possible advice**: `_get_id(module, xml_id)` is itself removed at 15.0. Use `env.ref()` or `_xmlid_to_res_id()`.
+- `t-out` "equals old `t-raw`, no escaping" → **false**: `t-out` compiles to `escape(content)`; only `markupsafe.Markup` values render unescaped. `fields.Html` values are Markup, `Char`/`Text` are not.
+- `t-raw` removed at 15.0 → **deprecated at 15.0, removed at 16.0** (16.0 `qweb.py` has zero `t-raw` occurrences).
+- `SavepointCase` removed at 15.0 → **kept as a deprecated alias**, but its base changed from `SingleTransactionCase` to `TransactionCase`, so transaction semantics changed silently.
+- `Environment.manage()` removed at 15.0 → **kept as a no-op** that warns.
+- mail template body needs `type="qweb"` in XML → **no such attribute value exists** (zero occurrences across 15.0 XML). The engine is declared on the field: `fields.Html(..., render_engine='qweb')`.
+- manifest `qweb` key "errors at 15.0" → **silently ignored** (Odoo's own `l10n_ae_pos` still carries it). Asset mistakes surface as missing UI, not as a crash.
+- `subtype` → `subtype_xmlid` → **13→14**, not 14→15 (`message_post` signatures of 14.0 and 15.0 are identical).
 
 ## How to extend this file
 
