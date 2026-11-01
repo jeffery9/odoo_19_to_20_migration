@@ -149,6 +149,7 @@ Odoo 19 用 *privilege* 取代 group *category*。多个独立来源（Cybrosys�
 | `res.users.groups_id` | `res.users.group_ids` | user 侧组关系改名 |
 
 **规则**：
+
 - 自定义 `res.groups` XML 仍须在引用它们的 `ir.model.access.csv` **之前**加载。
 - 记录规则（record rule）的 `groups=` 属性在 19 安装时按既有 group XML-ID 严格校验——悬空的 `groups="x.group_y"` 会在安装时抛错。
 
@@ -282,12 +283,22 @@ def my_endpoint(self): ...
 
 > 其他 EE 模块改名有可能；需对照 Enterprise 19.0 树复核。
 
-### 6.2 模型改名 — `[verify]`
+### 6.2 模型改名与新增 — CONFIRMED
 
-| Odoo 18 model | Odoo 19 model | 来源 |
-|---|---|---|
-| `stock.quant.package` | `stock.package` | SDLC Corp |
-| `procurement.group` | `stock.reference` | SDLC Corp |
+| Odoo 18 model | Odoo 19 model | 类型 | 来源 |
+|---|---|---|---|
+| `stock.quant.package` | `stock.package` | 改名 | 源码核实（18.0 quant_package.py / 19.0 stock_package.py） |
+| `hr.expense.sheet` | `hr.expense` | 合并 | 源码核实（18.0 有 sheet、19.0 无） |
+| `hr.contract` | `hr.version` | 改名 | 源码核实（18.0 hr_contract / 19.0 hr_version） |
+| — | `stock.reference` | **新增** | 源码核实（19.0 `addons/stock/models/stock_reference.py`） |
+| — | `project.role`、`project.template.create.wizard` | **新增** | 源码核实（18→19 模型集 diff） |
+
+> **纠错：`procurement.group` 不是改名为 `stock.reference`。**
+> 部分二手资料（SDLC 等）把 `procurement.group`→`stock.reference` 列为改名，源码核实**不成立**：
+> `procurement.group` 是采购分组（把同一销售单的 moves 聚合成 picking），19.0 **直接移除**；
+> 而 `stock.reference` 是 19.0 **新增**的"库存单据引用链"模型（`_description = 'Reference between stock documents'`，
+> 字段为 `name` + `move_ids` m2m + `picking_ids` compute），用途是替代服务端 `origin` 字符串、
+> 串起补货链上的单据引用关系。两者语义不同，不能当作改名互换。
 
 ### 6.3 已移除模型 — CONFIRMED
 
@@ -295,6 +306,30 @@ def my_endpoint(self): ...
 |---|---|
 | `res.partner.title` | 19 移除（Cybrosys、ERP24）——更新引用它的模块 |
 | `uom.category` | 19 移除（Octura、SDLC、Cybrosys）——见 6.4 UoM 字段改名 |
+| `procurement.group` | 19 移除（源码：18.0 `stock_rule.py` 有、19.0 无）——**连同引用字段一并移除**，见 6.3.1 |
+| `product.packaging` | 19 移除（18.0 有、19.0 无，EE 亦无）——包装改由 UoM/包装层级新机制承载 |
+| `account.fiscal.position.tax` | 19 移除（18.0 有、19.0 无）——税位直接映射税标签 |
+
+#### 6.3.1 采购组的移除连带面（库存头号断裂）
+
+`procurement.group` 移除不只是少一个模型，`group_id` 这条链全断：
+
+| 18.0 | 19.0 | 说明 |
+|---|---|---|
+| `procurement.group` 模型 | 移除 | 无同名替代 |
+| `stock.move.group_id`（m2o → procurement.group） | 移除 | 移动行不再挂采购组 |
+| `stock.picking.group_id` | 移除 | 调拨单不再挂采购组 |
+| `sale.order.procurement_group_id` | 移除 | 销售单不再显式持有采购组 |
+| — | `stock.reference`（新增） | 仅承接"单据引用链"，**不含**采购分组语义 |
+
+**影响面**：所有按采购组聚合的报表、拣货批次逻辑、`group_id` 相关的 domain 与 group by 全部失效。这是 18→19 库存侧最容易踩的一条——因为它看起来"只是删了个模型"，实际删掉了整条分组链。
+
+**迁移动作**：
+
+1. 报表层：按 `group_id` 聚合的改按 `origin` 或 `sale_id`（经 `move.sale_line_id.order_id`）；
+2. 代码层：`move.group_id` / `picking.group_id` 全部删除引用，需要"同源单据"语义时改用 `stock.reference`；
+3. 数据层：历史采购组数据无载体，如需保留统计口径，升级前导出 `procurement_group` 与 `stock_move.group_id` 映射；
+4. `stock.reference` 的用法：`picking.reference_ids`（related to `move_ids.reference_ids`），可用来串补货链。
 
 ### 6.4 字段改名 / 移除 — CONFIRMED（除非注明）
 
@@ -316,8 +351,12 @@ def my_endpoint(self): ...
 | `res.partner` | `sale_line_warn` | removed | Cybrosys |
 | `website` / shop | `website.pricelist_id` | `request.pricelist` | Cybrosys |
 | `fleet.vehicle.log.services` | `date` | `date_from` / `date_to` | Cybrosys |
-| `hr.contract` | — | `hr.version`（合同数据走员工版本） | SDLC `[verify]` |
+| `hr.contract` | — | `hr.version`（合同数据走员工版本） | 源码核实（18.0 hr_contract / 19.0 hr_version） |
 | `hr.candidate` | — | `hr.applicant` | SDLC `[verify]` **作用域风险**：`hr.candidate`→`hr.applicant` 早于 18.0，疑非 18→19 专属改动——采用前请确认 |
+| `stock.picking` | `move_ids_without_package` | removed | 源码核实（18.0 有、19.0 无） |
+| `stock.picking` | `move_line_ids_without_package` | removed | 源码核实（18.0 有、19.0 无） |
+| `stock.picking` | `has_packages` / `package_level_ids` / `move_line_exist` / `date` | removed | 源码核实（18→19 字段 diff） |
+| `product.template` | `packaging_ids` | removed | 随 `product.packaging` 一并移除 |
 
 > **作用域守卫**：`res.partner.bank.acc_number→account_number`、`res.users` 多个 19→20 改名、`account.group→account.account`（codemod `19.3-00`）都是 **19→20** 改动——归属 19→20 技能，**不**在此步。`account.group` 层级仅在 `--to ≥ 19.3`（Online）触发，非纯 18→19 CE 运行。
 
@@ -338,6 +377,11 @@ def my_endpoint(self): ...
 | `AttributeError`：`mobile` / `sale_line_warn` / `picking_warn` | 字段已移除 | §6.4 |
 | 动作 `target='inline'` 被拒 | target 已移除 | 第 4.6 章 |
 | Kanban 卡片不渲染 | `kanban-box` → `card` | 第 4.3 章 |
+| `Model 'procurement.group' is not available` / `group_id` 不存在 | 采购组模型及 `group_id` 链整体移除 | §6.3.1 |
+| `Model 'product.packaging' is not available` | 包装模型移除 | §6.3 |
+| 费用单相关模型报错 | `hr.expense.sheet` 已并入 `hr.expense` | §6.2 |
+| 按"无包裹行"筛选失效 | `move_ids_without_package` 移除 | §6.4 |
+| 税位-税映射报错 | `account.fiscal.position.tax` 移除 | §6.3 |
 
 ---
 

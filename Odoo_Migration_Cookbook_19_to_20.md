@@ -305,52 +305,84 @@ _name = models.Constraint(
 
 > 来源：本目录 `Odoo19to20Migration/references/modules-mapping.md`（基于 19.0/20.0 分支核实，基准日 2026-10-11）。`[EE-verify]` 须对照 EE 20.0 树复核。
 
-### 8.1 模型改名 / 合并
+### 8.1 模型改名 / 合并 / 移除（源码核实）— CONFIRMED
 
-| 19 | 20 |
+下表 21 条与 `Core_Models_Changelog.md` 同源，均经 19.0 / 20.0 源码模型集 diff 核实。
+
+| 19 | 20 | 类型 | 说明 |
+|---|---|---|---|
+| `stock.quant.package` | *（见红线 8.3）* | — | **属 18→19**，19/20 两版都已是 `stock.package` |
+| `hr.contract` | *（见红线 8.3）* | — | **属 18→19**，19/20 两版都已是 `hr.version` |
+| `hr.expense.sheet` | *（见红线 8.3）* | — | **属 18→19** |
+| `crossovered.budget(.lines)` | *（见红线 8.3）* | — | **属 17→18**（EE） |
+| `hr.payslip.input.type` | 并入 `hr.salary.rule` | MERGE | EE；`hr.payslip.input` 改挂 `salary_rule_id`，`code`/`name`/`input_suffix`/`user_instructions` 转 related |
+| `hr.leave.type` | 移除 | REMOVE | 20.0 无该模型；`hr.work.entry.type` **不是**改名目标（两者并存于 19.0） |
+| `hr.version.wizard` / `hr.contract.type` | 移除 | REMOVE | 合同向导与合同类型模型移除 |
+| `stock.scrap` | `stock.move`（`is_scrap=True`） | MERGE | 报废改由 `stock.move` 承载，`is_scrap` 为 20.0 **新增**字段（`stock.move`/`stock.move.line`/`stock.lot` 上都有） |
+| `stock.return.picking` | `stock.picking._create_return()` | BEHAVIOR | 退货由向导改为方法 |
+| `stock.picking.batch` | 仍在 `stock.picking.batch` | MERGE | 模型保留，仅 `stock_picking_batch` 模块并入 `stock`；`depends` 要改 |
+| `account.group` | `account.account` 层级 | MERGE | 用 `parent_id` / 计算 `parent_ids` 表达；codemod `19.3-00-account-groups` |
+| `payment.provider` | 移除 | REMOVE | 支付体系重构，非改名 |
+| `res.bank` | 合并进 `res.partner.bank` | MERGE | `bank_name`/`bank_bic` 变为存储字段 |
+| `mail.thread.cc` | 移除 | REMOVE | 抄送能力并入标准 `mail.thread` |
+| `product.template.attribute.exclusion` | 移除 | DEP | 排除改 `product.template.attribute.value` 的 `excluded_value_ids`（m2m，限同模板值） |
+| `stock_picking_batch` | → `stock` | MODULE | 模块合并，模型名不变 |
+| `industry_fsm` / `helpdesk_fsm*` / `documents_fsm` | `project` / `helpdesk` / `documents` | MODULE | `[EE-verify]` |
+| `account.asset`（`state='model'`） | `account.depreciation.model` | MODULE | `[EE-verify]` |
+| `website_sale_wishlist` / `website_sale_comparison` | 并入 `website_sale` | MODULE | `[verify]` |
+| `mail.tracking.value`（核心 `mail`） | `mail_tracking` 插件 | MODULE | `[verify]` |
+
+### 8.2 字段改名 / 移除（源码核实）— CONFIRMED
+
+| 模型（族） | 19 | 20 | 类型 |
+|---|---|---|---|
+| `stock.move` 等 | `product_uom` | `uom_id` | 改名 |
+| `account.move` 报表 | `type` | `move_type` | 改名 |
+| `stock.move` | `location_final_id` | `forecasted_location_id` | 改名 |
+| `res.partner` | `company_registry` | 移除 → `additional_identifiers`（JSON，按本地化键存多标识） | 移除 |
+| `res.partner` | `company_type` | 移除（用布尔 `is_company` 判断） | 移除 |
+| `ir.attachment` | `datas` | 移除（`raw` 自 17.0 起即并存，**非改名**） | 移除 |
+| `sale.order` | `state='done'` | 移除该状态 | 移除 |
+| `mrp.production` | `show_produce_all` | 移除（用 `button_mark_done`） | 移除 |
+| `product.template` | `is_storable`（定义在 `stock`） | 上移到 `product` 核心 | 搬迁 |
+
+> **`is_storable` 不是新增**：18.0 起它就定义在 `addons/stock/models/product.py`，20.0 只是上移到 `product` 核心。且 20.0 的 `type` Selection 仍然存在——不要把"可库存判断"改写成删 `type`。
+
+### 8.3 红线：本章曾收录但已被证伪的说法
+
+19→20 是二手资料（论坛、迁移服务商博客）错误最密集的版本对。以下说法曾在早期版本的本章出现，**源码核实不成立**，请勿采用：
+
+| 错误说法 | 真实情况 |
 |---|---|
-| `hr.contract` | `hr.version`（合同数据经员工版本） |
-| `hr.leave.type` | `hr.work.entry.type` |
-| `hr.expense.sheet` | `hr.expense` |
-| `hr.payslip.input.type` | 移除；20 工资输入设计（`input_usage_payslip`）**[EE-verify]** |
-| `stock.scrap` | `stock.move`（`is_scrap=True`） |
-| `stock.return.picking` | `stock.picking._create_return()` |
-| `stock.quant.package` | `stock.package` |
-| `note.note` | `project.task`（`project_todo`） |
-| `mail.thread.cc` | `mail.thread` |
-| `res.bank` | Char 字段或按用途用 `res.partner.bank` |
-| `industry_fsm` / `helpdesk_fsm*` / `documents_fsm` | `project` / `helpdesk` / `documents` **[EE-verify]** |
-| `stock_picking_batch` | `stock` |
-| `website_sale_wishlist` / `website_sale_comparison` | 并入 `website_sale` |
-| `crossovered.budget(.lines)` | `budget.analytic` / `budget.line` **[EE-verify]** |
-| `account.group` | `account.account` 层级（`parent_id`、计算 `parent_ids`）；codemod `19.3-00-account-groups` |
-| `account.asset`（`state='model'`） | `account.depreciation.model` **[EE-verify]** |
-| `mail.tracking.value`（核心 `mail`） | `mail_tracking` 插件 |
+| `hr.contract`→`hr.version` 属 19→20 | 属 **18→19**；19.0 与 20.0 都已是 `hr.version` |
+| `hr.expense.sheet`→`hr.expense` 属 19→20 | 属 **18→19** |
+| `stock.quant.package`→`stock.package` 属 19→20 | 属 **18→19** |
+| `res.users.groups_id`→`group_ids` 属 19→20 | 属 **18→19** |
+| `account.analytic.account.group_id`→`plan_id` 属 19→20 | 属 **15→16** |
+| `res.partner.mobile` 移除属 19→20 | 属 **18→19**；19/20 均无 `mobile` |
+| `project.task.user_id`→`user_ids` 属 19→20 | **不成立**；`user_ids` 自 16.0 已存在 |
+| `note.note`→`project.task` | **`note.note` 在 17/18/19/20 均不存在**，纯属虚构 |
+| `crossovered.budget`→`budget.analytic` 属 19→20 | 属 **17→18**（EE 预算族整族重写） |
+| `hr.payslip.input.type` 改为 `input_usage_payslip` 设计 | `input_usage_payslip` 是 `hr.salary.rule` 上的既有布尔字段（19.0 已有），非替代模型；真实变更是**并入 `hr.salary.rule`** |
+| `ir.attachment.datas`→`raw` 是改名 | `raw` 自 17.0 即并存，`datas` 在 20.0 被**移除**，属 FIELD-REMOVE |
+| `hr.leave.type`→`hr.work.entry.type` 是改名 | `hr.leave.type` **移除**；`hr.work.entry.type` 在 19.0 已并存，非改名目标 |
+| `payment.provider.state`→`is_live`/`is_published` 是字段改名 | `payment.provider` **模型整体移除**，谈字段改名没有意义 |
 
-### 8.2 字段改名
+#### 8.3.1 待核条目（二手资料有，源码未逐条坐实）
 
-| 模型（族） | 19 | 20 |
-|---|---|---|
-| `sale.order` | `state='done'` | 移除 |
-| `stock.move.line`/`stock.move`/`purchase.order.line`/`mrp.bom`/`repair.order` | `product_uom_id`/`product_uom` | `uom_id`（xpath `//field[@name='move_ids']/list/field[@name='uom_id']`） |
-| `sale.order.line`/`account.move.line` | `product_uom_id` | 不变 |
-| `res.partner.bank` | `acc_number`/`acc_holder_name` | `account_number`/`holder_name` |
-| `res.partner` | `company_type`/`mobile` | `is_company`/`phone` |
-| `res.users` | `groups_id` | `group_ids` |
-| `ir.attachment` | `datas` | `raw` |
-| `project.task` | `user_id` | `user_ids` |
-| `product.template` | `type=='product'` | `is_storable` |
-| `hr.leave` | `holiday_status_id`/`holiday_type` | `work_entry_type_id`/`validation_type` |
-| `account.analytic.account` | `group_id` | `plan_id` |
-| `crm.lead` | `currency_id` | `company_currency` |
-| `fleet.vehicle.log.services` | `date` | `date_from`/`date_to` |
-| `payment.provider` | `state` | `is_live`/`is_published` |
-| `resource.calendar.leaves` | `time_type` | `count_as` |
-| `account.move` 报表 | `type` | `move_type` |
-| `account.payment` | `state='in_process'`/`'paid'` | `'paid'`/`'reconciled'` |
-| `mrp.production` | `show_produce_all` | 移除（`button_mark_done`） |
+以下条目来自早期二手资料，**尚未**用 19.0/20.0 源码逐条核实，使用前请自行复核（`git grep` 两版对照）。列在这里是为了不丢信息，而不是推荐采用：
 
-### 8.3 XML-id 与视图
+| 说法 | 状态 |
+|---|---|
+| `res.partner.bank`：`acc_number`→`account_number`、`acc_holder_name`→`holder_name` | 待核（`res.bank` 合并进 `res.partner.bank` 已证实，字段名未核） |
+| `hr.leave`：`holiday_status_id`/`holiday_type`→`work_entry_type_id`/`validation_type` | 待核（`hr.leave.type` 移除已证实，`hr.leave` 侧字段未核） |
+| `crm.lead`：`currency_id`→`company_currency` | 待核 |
+| `resource.calendar.leaves`：`time_type`→`count_as` | 待核 |
+| `account.payment`：`state` 取值 `'in_process'`/`'paid'`→`'paid'`/`'reconciled'` | 待核 |
+| `sale.order.line`/`account.move.line` 的 `product_uom_id` 保持不变 | 待核（与 `uom_id` 改名同批，需确认边界） |
+| `fleet.vehicle.log.services`：`date`→`date_from`/`date_to` | 待核（该条在 18→19 章也出现，版本归属存疑） |
+
+### 8.4 XML-id 与视图
 
 | 19 | 20 |
 |---|---|
