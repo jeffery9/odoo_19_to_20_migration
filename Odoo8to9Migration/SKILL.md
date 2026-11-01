@@ -66,6 +66,23 @@ custom module must make.
 5. **Report** — summarize per addon: manual edits (with reference anchor used),
    remaining [verify]/[EE-verify] items, test status.
 
+## Model changes (core business models)
+
+**No core business model rename or removal.** 8→9 is the Community/Enterprise
+split; the model-layer work is confined to the `ir.model` bookkeeping and
+transient machinery:
+
+| Check | 8.0 | 9.0 | Action |
+|---|---|---|---|
+| `ir.model.osv_memory` | field present | → `transient` | Rename in any module reading it directly |
+| `_is_osv_memory` / `_search_osv_memory` | present | removed | Replace with `_transient` equivalents |
+| `osv_memory_autovacuum` model | present | → `ir_autovacuum` | Repoint XML-IDs and crons |
+
+Do not pull `stock.pack.operation` removal or `account.invoice`→`account.move`
+into this pair — they belong to 9→10 and 12→13 respectively.
+
+Cross-version model index: `Core_Models_Changelog.md`.
+
 ## Hard rules
 
 - Do not invent XML-IDs or method names: look them up in the 9.0 tree (or the

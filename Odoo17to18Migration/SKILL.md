@@ -1,6 +1,6 @@
 ---
 name: odoo_17_to_18_migration
-description: Migrates custom Odoo 17.0 addons to 18.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 17 to 18, fix 18.0 removals (name_get removed, check_access_rights/check_access_rule/user_has_groups/check_recursion removed, inselect operator removed, <tree> view type removed), apply renames (check_access/_filtered_access/has_access, _search_display_name, aggregator, type='json'→jsonrpc, tree→list), run or extend odoo-bin upgrade_code codemods (17.5-01-tree-to-list), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 17-only APIs.
+description: Migrates custom Odoo 17.0 addons to 18.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 17 to 18, fix 18.0 removals (name_get removed, check_access_rights/check_access_rule/user_has_groups/check_recursion removed, inselect operator removed, <tree> view type removed), apply renames (check_access/_filtered_access/has_access, _search_display_name, aggregator, type='json'→jsonrpc, tree→list), run or extend odoo-bin upgrade_code codemods (17.5-01-tree-to-list), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 17-only APIs. Also covers 17-to-18 model changes (Enterprise account_budget family rewritten from crossovered.budget to budget.analytic with kept=0, product.combo added, product.template.detailed_type removed, stock.assign.serial and account.unreconcile and mrp.document removed).
 version: 18.0.1
 author: Independent (companion to the Odoo Migration Cookbook I & II)
 category: migration
@@ -73,6 +73,28 @@ manual mappings second.
    log-level) and clear every `DeprecationWarning` — those are 18→19's hard-breaks.
 5. **Report** — summarize per addon: codemod changes, manual edits (with the
    reference anchor used), remaining [EE-verify]/[verify] items, test status.
+
+## Model changes (core business models)
+
+OCA's 18 guide also "does not list data model changes". Eight source-verified
+changes follow; the first is a hard break for Enterprise.
+
+| Check | 17.0 | 18.0 | Action |
+|---|---|---|---|
+| EE `account_budget` family | `crossovered.budget`, `crossovered.budget.lines`, `account.budget.post` | **removed** → `budget.analytic`, `budget.line`, `budget.report`, `budget.split.wizard` | Model-set diff shows `kept = 0` — this is a rewrite, not a rename. Budget semantics move from account-based to **analytic-plan-based**. Export old budget data before upgrading and rebuild |
+| `product.combo` / `product.combo.item` | absent (POS-only `pos.combo`) | **added** to `product` core | Combos become a cross-app feature; migrate POS data if used |
+| `product.template.detailed_type` | present | **removed** | Back to a single `type`; "is storable" is now `is_storable` (defined in `stock` at 18.0). This reverses the 14→15 addition — handle both if jumping from 14 |
+| `stock.assign.serial` | wizard | **removed** | Enter serial/lot numbers on `stock.move.line` directly |
+| `account.unreconcile` | wizard | **removed** | Unreconcile via `account.move` reversal/reset methods; no same-name model |
+| `mrp.document` | model | **removed** | Manufacturing documents attach via `ir.attachment`; no relocation in CE or EE |
+| `res.partner.has_unreconciled_entries` / `last_time_entries_checked` | fields | **removed** | Compute from `account.move.line` with `('reconciled','=',False)`; note the old fields were cached, the new approach is real-time |
+| ORM package layout | `odoo.osv` / `odoo.orm` | sub-packages reorganized | Fix import paths |
+
+**Stale translations warning:** 18.0 `account_budget/i18n/*.po` still contains
+`crossovered_budget` strings. `.po` files are not evidence a model exists —
+always `git grep` the `*.py` sources.
+
+Cross-version model index: `Core_Models_Changelog.md`.
 
 ## Hard rules
 

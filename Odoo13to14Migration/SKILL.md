@@ -1,6 +1,6 @@
 ---
 name: odoo_13_to_14_migration
-description: Migrates custom Odoo 13.0 addons to 14.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 13 to 14, fix 14.0 hard breaks (ir.actions.* direct access removed - use sudo/_for_xml_id//web/action/load, invisible/readonly dynamic expressions like state=='draft' rejected - must use attrs, _name_search now returns ids not (id,name) tuples, _compute_display_name override replaced by name_get, with_context(force_company=) -> with_company, Char size attribute removed, selection_add requires ondelete, TransientModel needs explicit ACL, stock.picking move_lines/move_line_ids rename [verify]), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 13-only APIs. Note 14.0 has NO upgrade_code codemod — all fixes are manual; DB changes handled by OpenUpgrade.
+description: Migrates custom Odoo 13.0 addons to 14.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 13 to 14, fix 14.0 hard breaks (ir.actions.* direct access removed - use sudo/_for_xml_id//web/action/load, invisible/readonly dynamic expressions like state=='draft' rejected - must use attrs, _name_search now returns ids not (id,name) tuples, _compute_display_name override replaced by name_get, with_context(force_company=) -> with_company, Char size attribute removed, selection_add requires ondelete, TransientModel needs explicit ACL, stock.picking move_lines/move_line_ids rename [verify]), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 13-only APIs. Note 14.0 has NO upgrade_code codemod — all fixes are manual; DB changes handled by OpenUpgrade. Also covers 13-to-14 model changes (stock.picking.responsible wizard removed). Note move_lines is NOT renamed at this step.
 version: 14.0.1
 author: Independent (companion to the Odoo Migration Cookbook series)
 category: migration
@@ -65,6 +65,20 @@ must make.
    `ImportError`/`AttributeError` first.
 5. **Report** — summarize per addon: manual edits (with reference anchor used),
    remaining [verify] items, test status.
+
+## Model changes (core business models)
+
+| Check | 13.0 | 14.0 | Action |
+|---|---|---|---|
+| `stock.picking.responsible` | model (wizard) | **removed** | Assign `picking.responsible_id` directly instead of opening the wizard |
+
+**Do NOT rename `move_lines` / `move_line_ids`.** A widely repeated claim says
+13→14 renames `stock.picking.move_lines`→`move_ids_without_package` and
+`move_line_ids`→`move_line_ids_without_package`. Source disproves it: both names
+coexist from 12.0 through 18.0 and are removed together only in **19.0**. Leave
+them alone at this step.
+
+Cross-version model index: `Core_Models_Changelog.md`.
 
 ## Hard rules
 

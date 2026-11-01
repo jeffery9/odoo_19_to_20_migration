@@ -1,6 +1,6 @@
 ---
 name: odoo_11_to_12_migration
-description: Migrates custom Odoo 11.0 addons to 12.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 11 to 12, fix 12.0 hard breaks (@api.one decorator removed, fields.Date/Datetime runtime values become real date/datetime objects with from_string removed, @api.model_create_multi introduced, ir.actions.act_window.view model removed, do_notify/do_warning removed, t-field-options->t-options, parent_left/parent_right->parent_path), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 11-only APIs. Note 12.0 has NO upgrade_code codemod — all fixes are manual; DB changes handled by OpenUpgrade.
+description: Migrates custom Odoo 11.0 addons to 12.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 11 to 12, fix 12.0 hard breaks (@api.one decorator removed, fields.Date/Datetime runtime values become real date/datetime objects with from_string removed, @api.model_create_multi introduced, ir.actions.act_window.view model removed, do_notify/do_warning removed, t-field-options->t-options, parent_left/parent_right->parent_path), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 11-only APIs. Note 12.0 has NO upgrade_code codemod — all fixes are manual; DB changes handled by OpenUpgrade. Also covers 11-to-12 model changes (ir.actions.act_window.view model removed, use view_ids or the views field on the action).
 version: 12.0.1
 author: Independent (companion to the Odoo Migration Cookbook series)
 category: migration
@@ -66,6 +66,18 @@ service; this skill covers the **code-level** mappings a custom module must make
    Start with `--dev=all` and clear every `DeprecationWarning`.
 5. **Report** — summarize per addon: manual edits (with reference anchor used),
    remaining [verify] items, test status.
+
+## Model changes (core business models)
+
+| Check | 11.0 | 12.0 | Action |
+|---|---|---|---|
+| `ir.actions.act_window.view` model | present | **removed** | Per-view binding is gone. Declare `view_ids` (o2m) or the `views` field on the action instead |
+
+The rest of this pair is API-level (`@api.one` removal, `fields.Date` becoming a
+runtime object) and does not move models. Do not drag `account.invoice`→
+`account.move` here — that is 12→13.
+
+Cross-version model index: `Core_Models_Changelog.md`.
 
 ## Hard rules
 

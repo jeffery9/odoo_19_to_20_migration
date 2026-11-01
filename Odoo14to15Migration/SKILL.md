@@ -1,6 +1,6 @@
 ---
 name: odoo_14_to_15_migration
-description: Migrates custom Odoo 14.0 addons to 15.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 14 to 15, fix 15.0 hard breaks (QWeb t-raw removed -> use t-out/t-esc + markupsafe.Markup, ir.model*/ir.model.fields/ir.model.data direct access removed -> use sudo or model APIs, mail.template Jinja syntax replaced by QWeb body + inline_template {{ }} for subject/email_from/email_to, ES modules /** @odoo-module **/ must be renamed *.esm.js, JS/SCSS assets moved from XML templates into __manifest__.py assets key (qweb key removed), SavepointCase alias removed -> TransactionCase, Environment.manage() no longer needed, subtype -> subtype_xmlid [verify]), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 14-only APIs. Note 15.0 has NO upgrade_code codemod — all fixes are manual; DB changes handled by OpenUpgrade.
+description: Migrates custom Odoo 14.0 addons to 15.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 14 to 15, fix 15.0 hard breaks (QWeb t-raw removed -> use t-out/t-esc + markupsafe.Markup, ir.model*/ir.model.fields/ir.model.data direct access removed -> use sudo or model APIs, mail.template Jinja syntax replaced by QWeb body + inline_template {{ }} for subject/email_from/email_to, ES modules /** @odoo-module **/ must be renamed *.esm.js, JS/SCSS assets moved from XML templates into __manifest__.py assets key (qweb key removed), SavepointCase alias removed -> TransactionCase, Environment.manage() no longer needed, subtype -> subtype_xmlid [verify]), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 14-only APIs. Note 15.0 has NO upgrade_code codemod — all fixes are manual; DB changes handled by OpenUpgrade. Also covers 14-to-15 model changes (stock.inventory and stock.inventory.line removed in favour of stock.quant counting, product.template.detailed_type added, project.milestone and project.update added).
 version: 15.0.1
 author: Independent (companion to the Odoo Migration Cookbook series)
 category: migration
@@ -64,6 +64,20 @@ applied by **OpenUpgrade** / the official upgrade service; this skill covers the
    DeprecationWarning). Fix `ImportError`/`AttributeError` first.
 5. **Report** — summarize per addon: manual edits (with reference anchor used),
    remaining [verify] items, test status.
+
+## Model changes (core business models)
+
+| Check | 14.0 | 15.0 | Action |
+|---|---|---|---|
+| `stock.inventory` / `stock.inventory.line` | models | **removed** | Counting moves onto `stock.quant` (`inventory_quantity`) with `stock.inventory.adjustment.name` naming each batch. Rewrite `env['stock.inventory']` → `env['stock.quant']` + `action_apply_inventory()`; export historical counts before upgrading |
+| `product.template.detailed_type` | absent | **added** (`consu`/`product`/`service`) | New parallel field; `type` still exists. If the migration target is ≥18.0, write `is_storable` instead — `detailed_type` is removed again in 18.0 |
+| `project.milestone` / `project.update` | absent | **added** | Project domain grows beyond tasks; evaluate replacing custom milestone models |
+
+The inventory change is a **working-model shift**, not a table swap: "open a
+count document → enter quantities → validate" becomes "edit quants → apply in
+bulk". Update SOPs and training, not just code.
+
+Cross-version model index: `Core_Models_Changelog.md`.
 
 ## Hard rules
 

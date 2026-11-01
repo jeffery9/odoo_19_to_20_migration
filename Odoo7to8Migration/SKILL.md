@@ -1,6 +1,6 @@
 ---
 name: odoo_7_to_8_migration
-description: Migrates custom Odoo 7.0 addons to 8.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 7 to 8, fix 8.0 hard breaks (the "new API" landing — new-API decorators @api.model/@api.multi/@api.one/@api.depends/@api.constrains/@api.onchange/@api.returns introduced, self.env replaces self.pool/self.cr/self.uid/self.context and (cr, uid, ids, context) signatures, osv.Model/osv.osv/osv.osv_memory -> models.Model/models.TransientModel, osv.except_osv/except_orm -> UserError, _columns/_all_columns -> class-attribute fields.Char(...) with _fields, QWeb report engine + Bootstrap/website builder introduced), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 7-only APIs. Note 8.0 and earlier have NO upgrade_code codemod (the engine only exists from 18.0) — all fixes are manual; DB changes handled by OpenUpgrade.
+description: Migrates custom Odoo 7.0 addons to 8.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 7 to 8, fix 8.0 hard breaks (the "new API" landing — new-API decorators @api.model/@api.multi/@api.one/@api.depends/@api.constrains/@api.onchange/@api.returns introduced, self.env replaces self.pool/self.cr/self.uid/self.context and (cr, uid, ids, context) signatures, osv.Model/osv.osv/osv.osv_memory -> models.Model/models.TransientModel, osv.except_osv/except_orm -> UserError, _columns/_all_columns -> class-attribute fields.Char(...) with _fields, QWeb report engine + Bootstrap/website builder introduced), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 7-only APIs. Note 8.0 and earlier have NO upgrade_code codemod (the engine only exists from 18.0) — all fixes are manual; DB changes handled by OpenUpgrade. Also covers 7-to-8 model declaration changes (_columns dict replaced by class-attribute fields, osv.Model replaced by models.Model, self.pool.get replaced by self.env).
 version: 8.0.1
 author: Independent (companion to the Odoo Migration Cookbook series)
 category: migration
@@ -69,6 +69,22 @@ the **code-level** mappings a custom module must make — i.e. the famous
    `DeprecationWarning`.
 5. **Report** — summarize per addon: manual edits (with reference anchor used),
    remaining [verify] items, test status.
+
+## Model changes (core business models)
+
+This pair has **no** model rename or removal — the break is how models and
+fields are *declared*. Structural migrations are unnecessary; every line of
+model code changes shape.
+
+| Check | 7.0 | 8.0 | Action |
+|---|---|---|---|
+| Base class | `osv.osv` / `osv.Model` | `models.Model` | `from openerp.osv import osv` → `from openerp import models`; transient → `models.TransientModel` |
+| Field declaration | `_columns = {'name': fields.char(...)}` | class attributes `name = fields.Char(...)` | Rewrite every `_columns` dict into class attributes; `_defaults` → `default=` on the field |
+| Field container | `self._columns` / `self._defaults` | `self._fields` | Any introspection code must switch container |
+| Record access | `self.pool.get('res.partner')` | `self.env['res.partner']` | Rewrite all `pool.get` call sites |
+| Exceptions | `osv.except_osv(...)` | `raise UserError(...)` | Replace, do not wrap |
+
+Cross-version model index: `Core_Models_Changelog.md`.
 
 ## Hard rules
 

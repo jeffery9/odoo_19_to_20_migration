@@ -1,6 +1,6 @@
 ---
 name: odoo_16_to_17_migration
-description: Migrates custom Odoo 16.0 addons to 17.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 16 to 17, fix 17.0 hard breaks (attrs/states attributes rejected with ValidationError, list invisible->column_invisible, res.config.settings simplified, hooks (cr,registry)->env, get_resource_path->file_path, active_id/active_ids/active_model context, message_post body format), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 16-only APIs. Note 17.0 has NO upgrade_code codemod — all fixes are manual.
+description: Migrates custom Odoo 16.0 addons to 17.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 16 to 17, fix 17.0 hard breaks (attrs/states attributes rejected with ValidationError, list invisible->column_invisible, res.config.settings simplified, hooks (cr,registry)->env, get_resource_path->file_path, active_id/active_ids/active_model context, message_post body format), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 16-only APIs. Note 17.0 has NO upgrade_code codemod — all fixes are manual. Also covers 16-to-17 model changes (account template model family removed so chart templates become Python or CSV data, hr.plan family removed in favour of mail.activity.plan, stock.immediate.transfer and mrp.immediate.production wizards removed, account.invoice.send renamed account.move.send, res.partner display_name renamed complete_name).
 version: 17.0.1
 author: Independent (companion to the Odoo Migration Cookbook series)
 category: migration
@@ -68,6 +68,23 @@ codemod for 16→17 — the tooling ships in 18.0).
    (`name_get`/`get_resource_path` warnings are 17→18 precursors).
 5. **Report** — summarize per addon: manual edits (with reference anchor used),
    remaining [EE-verify]/[verify] items, test status.
+
+## Model changes (core business models)
+
+OCA's 17 guide says it "does not list data model changes" — that means it will
+not enumerate per-module fields, **not** that nothing broke. Six source-verified
+changes follow.
+
+| Check | 16.0 | 17.0 | Action |
+|---|---|---|---|
+| `account.*.template` family (`account.tax.template`, `account.fiscal.position.template`, `account.group.template`, `account.account.template`) | models | **removed** | Chart templates become Python/CSV data. Rewrite `_get_chart_template_data()` to return dicts instead of creating template records. **Any self-built `l10n_*` chart package fails here** — symptom is `KeyError: 'account.tax.template'` or an empty chart |
+| `hr.plan` / `hr.plan.activity.type` / `hr.plan.wizard` | models | **removed** | Onboarding/activity plans move to generic `mail.activity.plan`; no in-CE replacement model |
+| `stock.immediate.transfer` | wizard | **removed** | Fields `immediate_transfer`/`show_validate`/`show_mark_as_todo` on `stock.picking` go too. Call `button_validate()` directly |
+| `mrp.immediate.production` | wizard | **removed** | Call the `mrp.production` action directly |
+| `account.invoice.send` | wizard | → `account.move.send` | Prefer `action_invoice_sent` over hardcoding the wizard name (18.0 splits out `account.move.send.wizard`) |
+| `res.partner.display_name` | stored | → `complete_name` (`translated_display_name` removed) | Searching `display_name` still works but sorting/grouping does not — switch those to `complete_name` |
+
+Cross-version model index: `Core_Models_Changelog.md`.
 
 ## Hard rules
 

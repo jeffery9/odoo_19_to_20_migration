@@ -1,6 +1,6 @@
 ---
 name: odoo_9_to_10_migration
-description: Migrates custom Odoo 9.0 addons to 10.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 9 to 10, fix 10.0 hard breaks (package rename from openerp to odoo, __openerp__.py to __manifest__.py, select=True to index=True on fields, XML inherit string position/xpath selectors -> attribute selectors + <openerp>/<data> root wrappers -> <odoo>, base.group_configuration -> base.group_system, copy method @api.one -> @api.multi, security-group modularization base.group_sale_* -> sales_team.* and base.group_hr_* -> hr.*), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 9-only APIs. Note 10.0 and earlier have NO upgrade_code codemod — the engine only exists from 18.0 — all fixes are manual; DB changes handled by OpenUpgrade.
+description: Migrates custom Odoo 9.0 addons to 10.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 9 to 10, fix 10.0 hard breaks (package rename from openerp to odoo, __openerp__.py to __manifest__.py, select=True to index=True on fields, XML inherit string position/xpath selectors -> attribute selectors + <openerp>/<data> root wrappers -> <odoo>, base.group_configuration -> base.group_system, copy method @api.one -> @api.multi, security-group modularization base.group_sale_* -> sales_team.* and base.group_hr_* -> hr.*), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 9-only APIs. Note 10.0 and earlier have NO upgrade_code codemod — the engine only exists from 18.0 — all fixes are manual; DB changes handled by OpenUpgrade. Also covers 9-to-10 model changes (stock.pack.operation and stock.picking.pack_operation_ids removed in favour of stock.move.line).
 version: 10.0.1
 author: Independent (companion to the Odoo Migration Cookbook series)
 category: migration
@@ -61,6 +61,19 @@ must make.
    old `base.group_*` ids) first. Start with `--dev=all`.
 5. **Report** — summarize per addon: manual edits (with reference anchor used),
    remaining [verify] items, test status.
+
+## Model changes (core business models)
+
+| Check | 9.0 | 10.0 | Action |
+|---|---|---|---|
+| `stock.pack.operation` model | present | **removed** | Duty taken over by `stock.move.line`. Rewrite `env['stock.pack.operation']` → `env['stock.move.line']`; `picking.pack_operation_ids` → `move_line_ids`. `picking_id` is reached via `move_id.picking_id`. OpenUpgrade has the data script. |
+| `stock.picking.pack_operation_ids` | present | removed | Same as above |
+
+This is the only core business model break in 9→10, and it is frequently
+mis-filed under 12→13 or 13→14. Source proof: present in 8.0/9.0, absent from
+10.0 onward.
+
+Cross-version model index: `Core_Models_Changelog.md`.
 
 ## Hard rules
 

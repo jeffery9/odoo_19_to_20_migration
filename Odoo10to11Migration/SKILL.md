@@ -1,6 +1,6 @@
 ---
 name: odoo_10_to_11_migration
-description: Migrates custom Odoo 10.0 addons to 11.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 10 to 11, fix 11.0 hard breaks (Python 3 mandatory — print/iteritems/has_key/unicode/xrange/StringIO/urllib2 syntax, openerp→odoo compat alias removed, Workflow engine fully removed, QWeb report API render_html→get_report_values + get_action→report_action, ir.cron model→model_id, module renames sale→sale_management & account_accountant→account_invoicing, module merges account_tax_cash_basis→account & report→web, base.group_configuration→base.group_system), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 10-only APIs. Note 11.0 has NO upgrade_code codemod — all fixes are manual; DB changes handled by OpenUpgrade.
+description: Migrates custom Odoo 10.0 addons to 11.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 10 to 11, fix 11.0 hard breaks (Python 3 mandatory — print/iteritems/has_key/unicode/xrange/StringIO/urllib2 syntax, openerp→odoo compat alias removed, Workflow engine fully removed, QWeb report API render_html→get_report_values + get_action→report_action, ir.cron model→model_id, module renames sale→sale_management & account_accountant→account_invoicing, module merges account_tax_cash_basis→account & report→web, base.group_configuration→base.group_system), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 10-only APIs. Note 11.0 has NO upgrade_code codemod — all fixes are manual; DB changes handled by OpenUpgrade. Also covers 10-to-11 model changes (ir.cron.model renamed model_id, stock.quant.qty renamed quantity).
 version: 11.0.1
 author: Independent (companion to the Odoo Migration Cookbook series)
 category: migration
@@ -62,6 +62,19 @@ must make.
    (`signal_workflow` / `render_html`) first. Start with `--dev=all`.
 5. **Report** — summarize per addon: manual edits (with reference anchor used),
    remaining [verify] items, test status.
+
+## Model changes (core business models)
+
+| Check | 10.0 | 11.0 | Action |
+|---|---|---|---|
+| `ir.cron.model` | string (eval'd model name) | `model_id` (m2o `ir.model`) | Rewrite cron records and any code creating them; prefer moving logic into `code` |
+| `stock.quant.qty` | `qty` | `quantity` | Rename in code, views and SQL/report queries. High-frequency field — inventory modules almost always hit this |
+
+`stock.quant.qty`→`quantity` is **10→11**, not 12→13 (source: 10.0 has `qty`,
+11.0 has `quantity`). Do not confuse it with `stock.move.product_uom`→`uom_id`,
+which only lands at 19→20.
+
+Cross-version model index: `Core_Models_Changelog.md`.
 
 ## Hard rules
 

@@ -1,6 +1,6 @@
 ---
 name: odoo_15_to_16_migration
-description: Migrates custom Odoo 15.0 addons to 16.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 15 to 16, fix 16.0 hard breaks (payment.acquirer->payment.provider and acquirer_id/provider_reference/_handle_feedback_data renames, coupon->loyalty model renames, stock.production.lot->stock.lot / account_analytic.group->account_analytic.plan / mail.channel.partner->mail.channel.member / account.tax.report->account.report renames, ir_translation table removed, track_visibility->tracking, api.multi removed), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 15-only APIs. Note 16.0 has NO upgrade_code codemod — all fixes are manual; DB renames are handled by OpenUpgrade.
+description: Migrates custom Odoo 15.0 addons to 16.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 15 to 16, fix 16.0 hard breaks (payment.acquirer->payment.provider and acquirer_id/provider_reference/_handle_feedback_data renames, coupon->loyalty model renames, stock.production.lot->stock.lot / account_analytic.group->account_analytic.plan / mail.channel.partner->mail.channel.member / account.tax.report->account.report renames, ir_translation table removed, track_visibility->tracking, api.multi removed), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 15-only APIs. Note 16.0 has NO upgrade_code codemod — all fixes are manual; DB renames are handled by OpenUpgrade. Also covers 15-to-16 model changes (stock.production.lot renamed stock.lot, payment.acquirer renamed payment.provider, coupon models renamed loyalty, account.analytic.account group_id renamed plan_id).
 version: 16.0.1
 author: Independent (companion to the Odoo Migration Cookbook series)
 category: migration
@@ -76,6 +76,17 @@ codemod for 15→16 — the tooling ships in 18.0). Database-level renames
    Start with `--dev=all` and clear every `DeprecationWarning`.
 6. **Report** — summarize per addon: manual edits (with reference anchor used),
    remaining [EE-verify]/[verify] items, test status.
+
+## Model changes (core business models)
+
+| Check | 15.0 | 16.0 | Action |
+|---|---|---|---|
+| `stock.production.lot` | model | → `stock.lot` | Rename all references, XML-IDs and inheritance |
+| `payment.acquirer` | model | → `payment.provider` | Also `acquirer_id`→`provider_id`, `acquirer_reference`→`provider_reference`, `_handle_feedback_data`→`_handle_notification_data` |
+| `coupon` / `sale_coupon` | models + modules | → `loyalty` / `sale_loyalty` | `coupon.program`→`loyalty.program`, `coupon.reward`→`loyalty.reward`, `coupon.rule`→`loyalty.rule`, `coupon.coupon`→`loyalty.card`; update `depends` too |
+| `account.analytic.account.group_id` | `group_id` | → `plan_id` | Field rename (module also renamed `account_analytic.group`→`account_analytic.plan`). **This is 15→16, not 19→20.** Check `account.analytic.line` references as well |
+
+Cross-version model index: `Core_Models_Changelog.md`.
 
 ## Hard rules
 

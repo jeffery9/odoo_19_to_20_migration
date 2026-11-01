@@ -1,6 +1,6 @@
 ---
 name: odoo_12_to_13_migration
-description: Migrates custom Odoo 12.0 addons to 13.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 12 to 13, fix 13.0 hard breaks (account.invoice/account.voucher merged into account.move with move_type, @api.multi/@api.returns/@api.cr/@api.model_cr decorators removed, res.partner customer/supplier booleans -> customer_rank/supplier_rank, ir.actions.act_window multi -> binding_view_types and src_model -> binding_model_id, dp.get_precision -> digits, track_visibility -> tracking, oldname removed, stock.quant qty -> quantity, product.product name now related, account.tax type -> type_tax_use, Binary defaults to attachment, sudo(user) -> with_user, .env.user.company_id -> .env.company), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 12-only APIs. Note 13.0 has NO upgrade_code codemod — all fixes are manual; DB changes handled by OpenUpgrade.
+description: Migrates custom Odoo 12.0 addons to 13.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 12 to 13, fix 13.0 hard breaks (account.invoice/account.voucher merged into account.move with move_type, @api.multi/@api.returns/@api.cr/@api.model_cr decorators removed, res.partner customer/supplier booleans -> customer_rank/supplier_rank, ir.actions.act_window multi -> binding_view_types and src_model -> binding_model_id, dp.get_precision -> digits, track_visibility -> tracking, oldname removed, stock.quant qty -> quantity, product.product name now related, account.tax type -> type_tax_use, Binary defaults to attachment, sudo(user) -> with_user, .env.user.company_id -> .env.company), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 12-only APIs. Note 13.0 has NO upgrade_code codemod — all fixes are manual; DB changes handled by OpenUpgrade. Also covers 12-to-13 accounting model changes (account.invoice and account.voucher merged into account.move, account.invoice.line into account.move.line, partner customer and supplier booleans replaced by customer_rank and supplier_rank).
 version: 13.0.1
 author: Independent (companion to the Odoo Migration Cookbook series)
 category: migration
@@ -70,6 +70,25 @@ codemod for 12→13 — the tooling ships in 18.0). Database-level changes
    Start with `--dev=all` and clear every `DeprecationWarning`.
 5. **Report** — summarize per addon: manual edits (with reference anchor used),
    remaining [verify] items, test status.
+
+## Model changes (core business models)
+
+The accounting rupture. Ten source-verified changes; all must be handled.
+
+| Check | 12.0 | 13.0 | Action |
+|---|---|---|---|
+| `account.invoice` | model | → `account.move` | Use `move_type` (`out_invoice`/`in_invoice`/`out_refund`/`in_refund`/`out_receipt`/`in_receipt`) to distinguish; `is_invoice()` helper |
+| `account.invoice.line` | model | → `account.move.line` | `invoice_id` → `move_id`; tax lines folded into the same model, identified by `tax_line_id` |
+| `account.voucher` | model | merged into `account.move` | Becomes `*_receipt` move types |
+| `account.invoice.confirm` / `.refund` wizards | models | → methods | `account.move.post()` / `account.move.reversal()` |
+| `account.move.amount` | field | → `amount_total` | Rename everywhere incl. reports |
+| `account.move.reverse_entry_id` | field | → `reversed_entry_id` | Rename |
+| `res.partner.customer` / `supplier` | booleans | → `customer_rank` / `supplier_rank` (int) | Domains become `('customer_rank','>',0)`; ranks accumulate |
+| `hr.employee` | model | split: inherits `hr.employee.base` | Keep inheriting `hr.employee`; only touch `hr.employee.base` if you extend the base |
+| `product.product.name` | stored | related to template | Writes go to the template |
+| `account.tax.type` → `type_tax_use` | — | `[verify]` | Source does not support this rename (`type_tax_use` exists since v9). Do not apply blindly |
+
+Cross-version model index: `Core_Models_Changelog.md`.
 
 ## Hard rules
 

@@ -1,6 +1,6 @@
 ---
 name: odoo_18_to_19_migration
-description: Migrates custom Odoo 18.0 addons to 19.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 18 to 19, fix 19.0 deprecations (odoo/orm package split, @api.returns removal, web_editor split into html_editor/html_builder, record._cr/_uid/_context deprecation, read_group→_read_group, type='json'→jsonrpc, odoo.osv deprecation, res.groups privilege model, Owl 3, module/model renames), run or extend odoo-bin upgrade_code codemods, or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 18-only APIs.
+description: Migrates custom Odoo 18.0 addons to 19.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 18 to 19, fix 19.0 deprecations (odoo/orm package split, @api.returns removal, web_editor split into html_editor/html_builder, record._cr/_uid/_context deprecation, read_group→_read_group, type='json'→jsonrpc, odoo.osv deprecation, res.groups privilege model, Owl 3, module/model renames), run or extend odoo-bin upgrade_code codemods, or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 18-only APIs. Also covers 18-to-19 model changes (stock.quant.package renamed stock.package, hr.contract renamed hr.version, hr.expense.sheet merged into hr.expense, procurement.group and its group_id chain removed, product.packaging removed, res.users groups_id renamed group_ids, stock.reference added).
 version: 19.0.1
 author: Independent (companion to the Odoo Migration Cookbook I & II)
 category: migration
@@ -65,6 +65,27 @@ Take an 18.0 custom addon (or a whole addons tree) to 19.0 with no leftover
    log-level) and clear every `DeprecationWarning` — those are 20.0's hard-breaks.
 5. **Report** — summarize per addon: codemod changes, manual edits (with the
    reference anchor used), remaining [EE-verify]/[verify] items, test status.
+
+## Model changes (core business models)
+
+| Check | 18.0 | 19.0 | Action |
+|---|---|---|---|
+| `stock.quant.package` | model | → `stock.package` | Rename; `stock.package.history` added, `stock.package_level` removed |
+| `hr.contract` | model (`hr_contract` module) | → `hr.version` (`hr_contract` merged into `hr`) | Rename all inheritance and references |
+| `hr.expense.sheet` | model | merged into `hr.expense` | Drop the sheet layer |
+| `res.users.groups_id` | field | → `group_ids` | **18→19, not 19→20** |
+| `procurement.group` | model | **removed** | Also removes `stock.move.group_id`, `stock.picking.group_id`, `sale.order.procurement_group_id`. The whole grouping chain dies — rebuild reports on `origin`/`sale_id` |
+| `product.packaging` | model | **removed** | `product.template.packaging_ids` goes too |
+| `stock.picking.move_ids_without_package` / `move_line_ids_without_package` | fields | **removed** | Use `move_ids` / `move_line_ids` |
+| `account.fiscal.position.tax` | model | **removed** | Fiscal positions map tax tags directly |
+| `res.partner.mobile` | field | **removed** | Use `phone` |
+| — | — | **added**: `stock.reference`, `project.role`, `project.template.create.wizard` | `stock.reference` is a *document reference chain* (m2m to `stock.move`, computed `picking_ids`) — it is **not** a replacement for `procurement.group` |
+
+Common mis-attribution: `stock.quant.package`→`stock.package`, `hr.contract`→
+`hr.version`, `hr.expense.sheet`→`hr.expense` and `groups_id`→`group_ids` are
+all **18→19**. Do not list them under 19→20.
+
+Cross-version model index: `Core_Models_Changelog.md`.
 
 ## Hard rules
 

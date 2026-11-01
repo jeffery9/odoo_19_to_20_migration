@@ -1,6 +1,6 @@
 ---
 name: odoo_6_to_7_migration
-description: Migrates custom OpenERP 6.0 addons to 7.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 6 to 7, fix 7.0 hard breaks (osv.osv -> osv.Model and osv.osv_memory -> osv.TransientModel for wizards, res.partner.address model removed/merged into res.partner, __openerp__.py manifest update_xml -> data with init_xml/demo_xml consolidated, view version="7.0" + sheet/header/footer + Bootstrap CSS), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 6-only APIs. NOTE 6/7 use the openerp package (NOT odoo) and the OLD API signatures (cr, uid, ids, context) — the new API (@api.*, models.Model, self.env) arrives in 7->8, NOT here. 7.0 has NO upgrade_code codemod — all fixes are manual; DB changes handled by OpenUpgrade.
+description: Migrates custom OpenERP 6.0 addons to 7.0 (CE and EE). Use when the user asks to upgrade/migrate modules from 6 to 7, fix 7.0 hard breaks (osv.osv -> osv.Model and osv.osv_memory -> osv.TransientModel for wizards, res.partner.address model removed/merged into res.partner, __openerp__.py manifest update_xml -> data with init_xml/demo_xml consolidated, view version="7.0" + sheet/header/footer + Bootstrap CSS), or validate a migrated addon. Also use when reviewing migration diffs or grepping for leftover 6-only APIs. NOTE 6/7 use the openerp package (NOT odoo) and the OLD API signatures (cr, uid, ids, context) — the new API (@api.*, models.Model, self.env) arrives in 7->8, NOT here. 7.0 has NO upgrade_code codemod — all fixes are manual; DB changes handled by OpenUpgrade. Also covers 6-to-7 model changes (res.partner.address removed and merged into res.partner, osv.osv base class renamed to osv.Model).
 version: 7.0.1
 author: Independent (companion to the Odoo Migration Cookbook series)
 category: migration
@@ -69,6 +69,19 @@ by **OpenUpgrade** / the official upgrade service; this skill covers the
    `DeprecationWarning` (`osv.osv` alias).
 5. **Report** — summarize per addon: manual edits (with reference anchor used),
    remaining [verify] items, test status.
+
+## Model changes (core business models)
+
+| Check | 6.0 | 7.0 | Action |
+|---|---|---|---|
+| `res.partner.address` model | present | **removed** | Address data merged into `res.partner` (`street`/`city`/`zip`/`country_id`). Rewrite every `env['res.partner.address']` reference; views inheriting its form must be re-anchored to `res.partner`. |
+| `osv.osv` base class | `osv.osv` | `osv.Model` | Transitional rename only — `osv.Model` is an alias at this stage. Full `models.Model` conversion is 7→8. |
+
+`res.partner.address` is the single hardest break of this pair: it is a model
+removal, not a rename, so there is no drop-in target. OpenUpgrade carries the
+address→partner data migration.
+
+Cross-version model index: `Core_Models_Changelog.md`.
 
 ## Hard rules
 

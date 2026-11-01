@@ -66,6 +66,14 @@ covers the **code-level** manifest/structure mappings a custom module must make.
 5. **Report** — summarize per addon: manual edits (with reference anchor used),
    remaining [verify] items, test status.
 
+## Model changes (core business models)
+
+**None.** 5→6 has no core business model rename, addition or removal. The break
+is entirely in packaging metadata (`__terp__.py` → `__openerp__.py`) and view
+bootstrap. Do not invent model renames here.
+
+Cross-version model index: `Core_Models_Changelog.md`.
+
 ## Hard rules
 
 - Do not invent XML-IDs or method names: look them up in the 6.0 tree (or the
